@@ -15,5 +15,5 @@ data class Noticia(
     @DrawableRes val imagenTerciaria: Int,
     val likes: Int,
     val isLikedByUser: Boolean,
-    val compartidos: Int,
+    val isSavedOnCalendar: Boolean,
 )

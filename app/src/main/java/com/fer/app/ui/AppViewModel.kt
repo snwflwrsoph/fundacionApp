@@ -94,6 +94,10 @@ class AppViewModel(
         viewModelScope.launch { noticiaRepository.alternarLike(id) }
     }
 
+    fun alternarGuardarCalendarioNoticia(id: String) {
+        viewModelScope.launch { noticiaRepository.alternarGuardarCalendario(id) }
+    }
+
     // ---------- Configuración ----------
 
     fun cambiarNotificaciones(valor: Boolean) = actualizarAjustes { it.copy(notificaciones = valor) }
@@ -110,6 +114,8 @@ class AppViewModel(
     private fun actualizarAjustes(transformar: (AjustesApp) -> AjustesApp) {
         viewModelScope.launch { ajustesRepository.guardar(transformar(ajustesRepository.ajustes.value)) }
     }
+
+
 
     companion object {
         /** Único lugar donde se eligen las implementaciones: hoy los datos hardcodeados. */

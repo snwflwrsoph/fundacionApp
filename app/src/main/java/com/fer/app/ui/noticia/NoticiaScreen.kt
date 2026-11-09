@@ -18,8 +18,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -50,8 +52,8 @@ fun NoticiaScreen(
     noticia: Noticia,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    onShare: () -> Unit = {},
     onLikeClick: () -> Unit = {},
+    onSaveClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -198,6 +200,24 @@ fun NoticiaScreen(
 
             Text(
                 text = noticia.likes.toString(),
+                style = MaterialTheme.typography.labelLarge,
+                color = FerNavy
+            )
+
+            IconToggleButton(
+                checked = noticia.isSavedOnCalendar,
+                onCheckedChange = { onSaveClick() }
+            ) {
+                Icon(
+                    imageVector = if (noticia.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
+                    contentDescription = "Agregar a calendario",
+                    tint = FerNavy,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Text(
+                text = "Agregar a calendario",
                 style = MaterialTheme.typography.labelLarge,
                 color = FerNavy
             )

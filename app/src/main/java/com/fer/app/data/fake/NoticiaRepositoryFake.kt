@@ -41,4 +41,12 @@ class NoticiaRepositoryFake : NoticiaRepository {
             ))
         }
     }
+
+    override suspend fun alternarGuardarCalendario(id: String) {
+        _noticias.update { actuales ->
+            val noticia = actuales[id] ?: return@update actuales
+            val ahoraGuardadoCalendario = !noticia.isSavedOnCalendar
+            actuales + (id to noticia.copy(isSavedOnCalendar = ahoraGuardadoCalendario))
+        }
+    }
 }
