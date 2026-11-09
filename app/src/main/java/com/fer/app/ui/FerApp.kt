@@ -90,14 +90,13 @@ fun FerApp(viewModel: AppViewModel) {
     }
 
     fun finalizarFlujo() {
-        val primeraVez = !viewModel.perfil.value.onboardingCompleto
         viewModel.completarOnboarding()
-        if (primeraVez) {
-            navController.navigate(Routes.INICIO) {
-                popUpTo(Routes.BIENVENIDA) { inclusive = true }
+
+        navController.navigate(Routes.INICIO) {
+            popUpTo(Routes.BIENVENIDA) {
+                inclusive = true
             }
-        } else {
-            navController.popBackStack(Routes.BIENVENIDA, inclusive = true)
+            launchSingleTop = true
         }
     }
 
@@ -154,7 +153,12 @@ fun FerApp(viewModel: AppViewModel) {
                     seleccionInicial = perfil.tipoUsuario,
                     onContinuar = { tipo ->
                         viewModel.seleccionarTipoUsuario(tipo)
-                        navController.navigate(Routes.NIVEL_EDUCATIVO)
+
+                        if (tipo.name == "ASPIRANTE") {
+                            finalizarFlujo()
+                        } else {
+                            navController.navigate(Routes.NIVEL_EDUCATIVO)
+                        }
                     }
                 )
             }
@@ -176,11 +180,17 @@ fun FerApp(viewModel: AppViewModel) {
             composable(Routes.TIPO_UNIVERSIDAD) {
                 SeleccionScreen(
                     opciones = catalogo.tiposUniversidad,
+                    confirmarAutomaticamente = true,
                     onRegresar = { navController.popBackStack() },
                     onContinuar = { id, _ ->
                         TipoUniversidad.deId(id)?.let { tipo ->
                             viewModel.seleccionarTipoUniversidad(tipo)
-                            navController.navigate(Routes.universidades(tipo))
+
+                            if (tipo == TipoUniversidad.PUBLICA) {
+                                finalizarFlujo()
+                            } else {
+                                navController.navigate(Routes.universidades(tipo))
+                            }
                         }
                     }
                 )
@@ -195,6 +205,7 @@ fun FerApp(viewModel: AppViewModel) {
                 SeleccionScreen(
                     opciones = catalogo.universidades[tipo].orEmpty(),
                     esUltimaPantalla = true,
+                    confirmarAutomaticamente = true,
                     onRegresar = { navController.popBackStack() },
                     onContinuar = { id, textoOtra ->
                         viewModel.seleccionarUniversidad(id, textoOtra)
