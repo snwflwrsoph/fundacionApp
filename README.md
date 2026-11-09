@@ -1,12 +1,7 @@
-# FER – app unificada (navegación con datos hardcodeados)
-
-Proyecto Android Studio (Kotlin + Jetpack Compose) que junta las pantallas de los zips
-`Configuracion-main`, `PreferenciasFER`, `pantallas_fer_preferencias`, `pantallaFYP` y `NoticiaFER`.
+# APP FER
 
 ## Mapa de navegación
-Ver el comentario en `ui/FerApp.kt`. Resumen:
-
-- Primer arranque: Bienvenida (Becario/Aspirante) → Nivel educativo → (si Universidad) Pública/Privada → lista de universidades → Inicio.
+- Primera sesión: Bienvenida (Becario/Aspirante) → Nivel educativo → (si Universidad) Pública/Privada → lista de universidades → Inicio.
 - Barra inferior: Inicio (feed) · Guardados · Preferencias (reabre el flujo anterior) · Ajustes → Tipo de usuario.
 - Tocar un anuncio (Inicio o Guardados) abre la noticia con su detalle, "me gusta" y compartir.
 - La estrella de cada anuncio lo guarda (solo en memoria) y aparece en Guardados.
@@ -19,6 +14,6 @@ Ver el comentario en `ui/FerApp.kt`. Resumen:
 - `navigation/Routes.kt` rutas.
 
 ## Conectar el backend después
-1. Crear implementaciones de `PerfilRepository`, `AjustesRepository`, `CatalogoRepository`, `AnnouncementRepository` y `NoticiaRepository` (Retrofit, Firebase, Room…).
+1. Crear implementaciones de `PerfilRepository`, `AjustesRepository`, `CatalogoRepository`, `AnnouncementRepository` y `NoticiaRepository` (Firebase)
 2. Cambiarlas en `AppViewModel.Factory`.
 (También `AnnouncementRepository` para el feed.) Las pantallas y la navegación no cambian.
