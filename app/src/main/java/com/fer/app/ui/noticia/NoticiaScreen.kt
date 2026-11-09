@@ -71,13 +71,6 @@ fun NoticiaScreen(
                     contentDescription = "Regresar"
                 )
             }
-
-            FilledTonalIconButton(onClick = onShare) {
-                Icon(
-                    imageVector = Icons.Filled.Share,
-                    contentDescription = "Compartir"
-                )
-            }
         }
 
         // Imagen principal
@@ -196,25 +189,6 @@ fun NoticiaScreen(
 
             Text(
                 text = noticia.likes.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                color = FerNavy
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            IconButton(
-                onClick = onShare,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Send,
-                    contentDescription = "Enviados",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Text(
-                text = noticia.compartidos.toString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = FerNavy
             )
