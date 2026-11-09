@@ -236,8 +236,8 @@ fun FerApp(viewModel: AppViewModel) {
                     NoticiaScreen(
                         noticia = noticia,
                         onBack = { navController.popBackStack() },
-                        onShare = { compartir(context, noticia) },
-                        onLikeClick = { viewModel.alternarLikeNoticia(id) }
+                        onLikeClick = { viewModel.alternarLikeNoticia(id) },
+                        onSaveClick = { viewModel.alternarGuardarCalendarioNoticia(id) }
                     )
                 }
             }

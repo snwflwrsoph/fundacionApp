@@ -35,6 +35,7 @@ interface NoticiaRepository {
     /** Pide el detalle del [anuncio] (con backend: llamada de red; hoy: datos de ejemplo). */
     suspend fun cargar(anuncio: Announcement)
     suspend fun alternarLike(id: String)
+    suspend fun alternarGuardarCalendario(id: String)
 }
 
 interface CatalogoRepository {

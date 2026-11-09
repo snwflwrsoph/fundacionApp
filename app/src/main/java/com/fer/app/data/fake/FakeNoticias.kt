@@ -22,6 +22,6 @@ object FakeNoticias {
         imagenTerciaria = R.drawable.activity_fair,
         likes = 42,
         isLikedByUser = false,
-        compartidos = 17,
+        isSavedOnCalendar = false
     )
 }
