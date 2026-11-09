@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +41,7 @@ import com.fer.app.data.fake.FakeNoticias
 import com.fer.app.model.Noticia
 import com.fer.app.ui.theme.FerGrisAzulado
 import com.fer.app.ui.theme.FerNavy
+import com.fer.app.ui.theme.FerBotones
 import com.fer.app.ui.theme.FerTheme
 import com.fer.app.ui.theme.GoogleSansFlex
 
@@ -65,7 +67,13 @@ fun NoticiaScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            FilledTonalIconButton(onClick = onBack) {
+            FilledTonalIconButton(
+                onClick = onBack,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = FerBotones,
+                    contentColor = FerNavy
+                )
+                ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Regresar"
@@ -183,6 +191,7 @@ fun NoticiaScreen(
                 Icon(
                     imageVector = if (noticia.isLikedByUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Me gusta",
+                    tint = FerNavy,
                     modifier = Modifier.size(18.dp)
                 )
             }

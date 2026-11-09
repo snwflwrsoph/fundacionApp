@@ -17,3 +17,6 @@ val FerOnGold = Color(0xFF0B1530)
 
 // Texto secundario de la pantalla de noticia (autor, fecha)
 val FerGrisAzulado = Color(0xFF5B688C)
+
+// botones de navegacion
+val FerBotones = Color(0xFFC6CFE8)
