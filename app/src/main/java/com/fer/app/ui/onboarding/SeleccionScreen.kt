@@ -32,17 +32,35 @@ import com.fer.app.ui.theme.FerFondoTarjetaSeleccionada
 import com.fer.app.ui.theme.FerFontFamily
 import com.fer.app.ui.theme.FerNavy
 import com.fer.app.ui.theme.FerTheme
+import kotlinx.coroutines.delay
+import com.fer.app.model.TipoUniversidad
 
 @Composable
+
 fun SeleccionScreen(
     opciones: List<OpcionSeleccion>,
     onContinuar: (Int, String) -> Unit,
     onRegresar: () -> Unit,
     modifier: Modifier = Modifier,
-    esUltimaPantalla: Boolean = false // true => botón con palomita (✓) como en Frame 11
+    esUltimaPantalla: Boolean = false,
+    confirmarAutomaticamente: Boolean = false
 ) {
     var seleccionadoId by rememberSaveable { mutableStateOf<Int?>(null) }
     var otraUniversidadTexto by rememberSaveable { mutableStateOf("") }
+    var confirmando by remember { mutableStateOf(false) }
+
+    LaunchedEffect(confirmando) {
+        if (confirmando) {
+            delay(600)
+
+            seleccionadoId?.let { id ->
+                onContinuar(
+                    id,
+                    if (id == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
+                )
+            }
+        }
+    }
 
     val puedeContinuar = when {
         seleccionadoId == null -> false
@@ -98,7 +116,21 @@ fun SeleccionScreen(
 
                 Column {
                     Card(
-                        onClick = { seleccionadoId = opcion.id },
+                        onClick = {
+                            if (!confirmando) {
+                                seleccionadoId = opcion.id
+
+                                if (confirmarAutomaticamente &&
+                                    (
+                                            (esUltimaPantalla && opcion.id != ID_UNIVERSIDAD_OTRA) ||
+                                                    (!esUltimaPantalla && opcion.id == TipoUniversidad.PUBLICA.id)
+                                            )
+                                ) {
+                                    confirmando = true
+                                }
+
+                            }
+                        },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (estaSeleccionado) FerFondoTarjetaSeleccionada else Color.White
@@ -145,14 +177,38 @@ fun SeleccionScreen(
                             }
 
                             Spacer(modifier = Modifier.width(4.dp))
-                            RadioButton(
-                                selected = estaSeleccionado,
-                                onClick = { seleccionadoId = opcion.id },
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = FerNavy,
-                                    unselectedColor = FerNavy
+
+                            if (estaSeleccionado && confirmando) {
+                                Icon(
+                                    imageVector = PalomitaIcon,
+                                    contentDescription = "Selección confirmada",
+                                    tint = FerNavy,
+                                    modifier = Modifier.size(32.dp)
                                 )
-                            )
+                            } else {
+                                RadioButton(
+                                    selected = estaSeleccionado,
+                                    onClick = {
+                                        if (!confirmando) {
+                                            seleccionadoId = opcion.id
+
+                                            if (confirmarAutomaticamente &&
+                                                (
+                                                        (esUltimaPantalla && opcion.id != ID_UNIVERSIDAD_OTRA) ||
+                                                                (!esUltimaPantalla && opcion.id == TipoUniversidad.PUBLICA.id)
+                                                        )
+                                            ) {
+                                                confirmando = true
+                                            }
+
+                                        }
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = FerNavy,
+                                        unselectedColor = FerNavy
+                                    )
+                                )
+                            }
                         }
                     }
 
@@ -178,23 +234,42 @@ fun SeleccionScreen(
                 .padding(top = 8.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+
             BotonCircular(
                 icono = FlechaIzquierdaIcon,
                 descripcion = "Regresar",
-                habilitado = true,
-                onClick = onRegresar
-            )
-            BotonCircular(
-                icono = if (esUltimaPantalla) PalomitaIcon else FlechaDerechaIcon,
-                descripcion = if (esUltimaPantalla) "Confirmar" else "Continuar",
-                habilitado = puedeContinuar,
+                habilitado = !confirmando,
                 onClick = {
-                    onContinuar(
-                        seleccionadoId!!,
-                        if (seleccionadoId == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
-                    )
+                    if (!confirmando) {
+                        onRegresar()
+                    }
                 }
             )
+
+            if (esUltimaPantalla) {
+                BotonCircular(
+                    icono = PalomitaIcon,
+                    descripcion = "Confirmar",
+                    habilitado = puedeContinuar && !confirmando,
+                    onClick = {
+                        if (puedeContinuar && !confirmando) {
+                            confirmando = true
+                        }
+                    }
+                )
+            } else {
+                BotonSiguienteFER(
+                    habilitado = puedeContinuar && !confirmando,
+                    onClick = {
+                        seleccionadoId?.let { id ->
+                            onContinuar(
+                                id,
+                                if (id == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 }

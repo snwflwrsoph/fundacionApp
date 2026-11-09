@@ -22,6 +22,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import com.fer.app.R
 import com.fer.app.model.TipoUsuario
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.coroutines.delay
 
 private val azulFER = Color(0xFF172958)
 private val grisSeleccion = Color(0xFFD5D5D5)
@@ -33,7 +37,18 @@ fun PreferenciasScreen(
     seleccionInicial: TipoUsuario? = null,
     onContinuar: (TipoUsuario) -> Unit = {}
 ) {
-    var seleccion by remember(seleccionInicial) { mutableStateOf(seleccionInicial) }
+    var seleccion by remember {
+        mutableStateOf<TipoUsuario?>(null)
+    }
+    var confirmando by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(confirmando) {
+        if (confirmando) {
+            delay(600)
+            onContinuar(TipoUsuario.ASPIRANTE)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -83,7 +98,12 @@ fun PreferenciasScreen(
             descripcion = "Convocatorias y avisos para futuros becarios.",
             icono = R.drawable.binoculares,
             seleccionado = seleccion == TipoUsuario.ASPIRANTE,
-            onClick = { seleccion = TipoUsuario.ASPIRANTE }
+            onClick = {
+                if (!confirmando) {
+                    seleccion = TipoUsuario.ASPIRANTE
+                    confirmando = true
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(65.dp))
@@ -94,7 +114,7 @@ fun PreferenciasScreen(
             horizontalArrangement = Arrangement.End
         ) {
             BotonSiguienteFER(
-                habilitado = seleccion != null,
+                habilitado = seleccion == TipoUsuario.BECARIO && !confirmando,
                 onClick = {
                     seleccion?.let(onContinuar)
                 }
@@ -161,15 +181,25 @@ private fun OpcionFER(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        RadioButton(
-            selected = seleccionado,
-            onClick = onClick,
-            modifier = Modifier.size(32.dp),
-            colors = RadioButtonDefaults.colors(
-                selectedColor = azulFER,
-                unselectedColor = azulFER
+
+        if (seleccionado && titulo == "Aspirante") {
+            Icon(
+                imageVector = PalomitaIcon,
+                contentDescription = "Selección confirmada",
+                tint = azulFER,
+                modifier = Modifier.size(32.dp)
             )
-        )
+        } else {
+            RadioButton(
+                selected = seleccionado,
+                onClick = onClick,
+                modifier = Modifier.size(32.dp),
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = azulFER,
+                    unselectedColor = azulFER
+                )
+            )
+        }
     }
 }
 

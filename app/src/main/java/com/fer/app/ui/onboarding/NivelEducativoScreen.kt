@@ -24,6 +24,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import com.fer.app.R
 import com.fer.app.model.NivelEducativo
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 
 
 private val azulFER = Color(0xFF172958)
@@ -37,8 +40,20 @@ fun NivelEducativoScreen(
     onRegresar: () -> Unit = {},
     onContinuar: (NivelEducativo) -> Unit = {}
 ) {
-    var nivelSeleccionado by remember(seleccionInicial) {
-        mutableStateOf(seleccionInicial)
+
+    var nivelSeleccionado by remember {
+        mutableStateOf<NivelEducativo?>(null)
+    }
+
+    var confirmando by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(confirmando) {
+        if (confirmando) {
+            delay(600)
+            nivelSeleccionado?.let(onContinuar)
+        }
     }
 
     Column(
@@ -61,7 +76,7 @@ fun NivelEducativoScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         Text(
-            text = "Selecciona quién eres",
+            text = "Selecciona tu nivel educativo",
             fontSize = 15.sp,
             color = azulFER
         )
@@ -80,7 +95,14 @@ fun NivelEducativoScreen(
             descripcion = "Accede a avisos, convocatorias y beneficios educativos para becarios FER.",
             icono = R.drawable.backpack,
             seleccionado = nivelSeleccionado == NivelEducativo.PREPARATORIA,
-            onClick = { nivelSeleccionado = NivelEducativo.PREPARATORIA }
+            mostrarPalomita = confirmando &&
+                    nivelSeleccionado == NivelEducativo.PREPARATORIA,
+            onClick = {
+                if (!confirmando) {
+                    nivelSeleccionado = NivelEducativo.PREPARATORIA
+                    confirmando = true
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(22.dp))
@@ -90,7 +112,11 @@ fun NivelEducativoScreen(
             descripcion = "Convocatorias y avisos para futuros becarios.",
             icono = R.drawable.education,
             seleccionado = nivelSeleccionado == NivelEducativo.UNIVERSIDAD,
-            onClick = { nivelSeleccionado = NivelEducativo.UNIVERSIDAD }
+            onClick = {
+                if (!confirmando) {
+                    nivelSeleccionado = NivelEducativo.UNIVERSIDAD
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(22.dp))
@@ -100,33 +126,49 @@ fun NivelEducativoScreen(
             descripcion = "Convocatorias y avisos para futuros becarios.",
             icono = R.drawable.airplane,
             seleccionado = nivelSeleccionado == NivelEducativo.MAESTRIA,
-            onClick = { nivelSeleccionado = NivelEducativo.MAESTRIA }
+            mostrarPalomita = confirmando &&
+                    nivelSeleccionado == NivelEducativo.MAESTRIA,
+            onClick = {
+                if (!confirmando) {
+                    nivelSeleccionado = NivelEducativo.MAESTRIA
+                    confirmando = true
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(45.dp))
 
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
             BotonNivel("←") {
-                onRegresar()
+                if (!confirmando) {
+                    onRegresar()
+                }
             }
 
-            BotonNivel("→") {
-                nivelSeleccionado?.let(onContinuar)
-            }
+            BotonSiguienteFER(
+                habilitado = nivelSeleccionado == NivelEducativo.UNIVERSIDAD &&
+                        !confirmando,
+                onClick = {
+                    nivelSeleccionado?.let(onContinuar)
+                }
+            )
         }
     }
 }
 
 @Composable
+
 private fun OpcionNivel(
     titulo: String,
     descripcion: String,
     icono: Int,
     seleccionado: Boolean,
+    mostrarPalomita: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -178,14 +220,24 @@ private fun OpcionNivel(
             )
         }
 
-        RadioButton(
-            selected = seleccionado,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = azulFER,
-                unselectedColor = azulFER
+
+        if (mostrarPalomita) {
+            Icon(
+                imageVector = PalomitaIcon,
+                contentDescription = "Selección confirmada",
+                tint = azulFER,
+                modifier = Modifier.size(32.dp)
             )
-        )
+        } else {
+            RadioButton(
+                selected = seleccionado,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = azulFER,
+                    unselectedColor = azulFER
+                )
+            )
+        }
     }
 }
 
