@@ -88,58 +88,17 @@ fun PreferenciasScreen(
 
         Spacer(modifier = Modifier.height(65.dp))
 
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                color = azulFER,
+            BotonSiguienteFER(
+                habilitado = seleccion != null,
                 onClick = {
                     seleccion?.let(onContinuar)
                 }
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Canvas(modifier = Modifier.size(26.dp)) {
-                        val centroY = size.height / 2f
-                        val puntaX = size.width * 0.8f
-                        val grosor = 2.5.dp.toPx()
-                        val largo = size.width * 0.28f
-
-                        drawLine(
-                            color = Color.White,
-                            start = Offset(size.width * 0.2f, centroY),
-                            end = Offset(puntaX, centroY),
-                            strokeWidth = grosor,
-                            cap = StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = Color.White,
-                            start = Offset(
-                                puntaX - largo,
-                                size.height * 0.25f
-                            ),
-                            end = Offset(puntaX, centroY),
-                            strokeWidth = grosor,
-                            cap = StrokeCap.Round
-                        )
-
-                        drawLine(
-                            color = Color.White,
-                            start = Offset(puntaX, centroY),
-                            end = Offset(
-                                puntaX - largo,
-                                size.height * 0.75f
-                            ),
-                            strokeWidth = grosor,
-                            cap = StrokeCap.Round
-                        )
-                    }
-                }
-
-            }
+            )
         }
     }
 }
