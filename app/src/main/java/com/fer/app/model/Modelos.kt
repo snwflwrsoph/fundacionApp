@@ -7,6 +7,12 @@ enum class TipoUsuario { BECARIO, ASPIRANTE }
 
 enum class NivelEducativo { PREPARATORIA, UNIVERSIDAD, MAESTRIA }
 
+enum class TamanoTexto(val label: String, val scale: Float) {
+    CHICO("Chico", 0.85f),
+    NORMAL("Normal", 1.0f),
+    GRANDE("Grande", 1.15f)
+}
+
 /** El [id] es el que usa [OpcionSeleccion] en la pantalla de selección. */
 enum class TipoUniversidad(val id: Int) {
     PUBLICA(1),
@@ -44,7 +50,8 @@ data class AjustesApp(
     val notificaciones: Boolean = true,
     val modoOscuro: Boolean = false,
     val lectorPantalla: Boolean = false,
-    val compartirDatos: Boolean = true
+    val compartirDatos: Boolean = true,
+    val tamanoTexto: TamanoTexto = TamanoTexto.NORMAL
 )
 
 /** Listas que se muestran en las pantallas de selección. */

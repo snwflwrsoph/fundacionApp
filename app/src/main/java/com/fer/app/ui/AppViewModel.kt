@@ -1,18 +1,21 @@
 package com.fer.app.ui
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.fer.app.data.AjustesRepository
 import com.fer.app.data.AnnouncementRepository
 import com.fer.app.data.CatalogoRepository
 import com.fer.app.data.NoticiaRepository
 import com.fer.app.data.PerfilRepository
-import com.fer.app.data.fake.AjustesRepositoryFake
-import com.fer.app.data.fake.AnnouncementRepositoryFake
+import com.fer.app.data.fake.AjustesRepositoryPrefs
+import com.fer.app.data.fake.AnnouncementRepositoryPrefs
 import com.fer.app.data.fake.CatalogoRepositoryFake
 import com.fer.app.data.fake.NoticiaRepositoryFake
-import com.fer.app.data.fake.PerfilRepositoryFake
+import com.fer.app.data.fake.PerfilRepositoryPrefs
 import com.fer.app.model.AjustesApp
 import com.fer.app.model.Announcement
 import com.fer.app.model.Catalogo
@@ -20,6 +23,7 @@ import com.fer.app.model.ID_UNIVERSIDAD_OTRA
 import com.fer.app.model.NivelEducativo
 import com.fer.app.model.Noticia
 import com.fer.app.model.PerfilUsuario
+import com.fer.app.model.TamanoTexto
 import com.fer.app.model.TipoUniversidad
 import com.fer.app.model.TipoUsuario
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +36,13 @@ import kotlinx.coroutines.launch
  * Las pantallas solo leen estos StateFlow y llaman a sus funciones; no conocen de dónde vienen los datos.
  */
 class AppViewModel(
+    application: Application,
     private val perfilRepository: PerfilRepository,
     private val ajustesRepository: AjustesRepository,
     private val catalogoRepository: CatalogoRepository,
     private val announcementRepository: AnnouncementRepository,
     private val noticiaRepository: NoticiaRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     val perfil: StateFlow<PerfilUsuario> = perfilRepository.perfil
     val ajustes: StateFlow<AjustesApp> = ajustesRepository.ajustes
@@ -104,6 +109,7 @@ class AppViewModel(
     fun cambiarModoOscuro(valor: Boolean) = actualizarAjustes { it.copy(modoOscuro = valor) }
     fun cambiarLectorPantalla(valor: Boolean) = actualizarAjustes { it.copy(lectorPantalla = valor) }
     fun cambiarCompartirDatos(valor: Boolean) = actualizarAjustes { it.copy(compartirDatos = valor) }
+    fun cambiarTamanoTexto(tamano: TamanoTexto) = actualizarAjustes { it.copy(tamanoTexto = tamano) }
 
     // ---------- Internos ----------
 
@@ -115,19 +121,21 @@ class AppViewModel(
         viewModelScope.launch { ajustesRepository.guardar(transformar(ajustesRepository.ajustes.value)) }
     }
 
-
-
     companion object {
-        /** Único lugar donde se eligen las implementaciones: hoy los datos hardcodeados. */
+        /** Único lugar donde se eligen las implementaciones. */
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T = AppViewModel(
-                perfilRepository = PerfilRepositoryFake(),
-                ajustesRepository = AjustesRepositoryFake(),
-                catalogoRepository = CatalogoRepositoryFake(),
-                announcementRepository = AnnouncementRepositoryFake(),
-                noticiaRepository = NoticiaRepositoryFake()
-            ) as T
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+                val application = checkNotNull(extras[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY])
+                return AppViewModel(
+                    application = application,
+                    perfilRepository = PerfilRepositoryPrefs(application),
+                    ajustesRepository = AjustesRepositoryPrefs(application),
+                    catalogoRepository = CatalogoRepositoryFake(),
+                    announcementRepository = AnnouncementRepositoryPrefs(application),
+                    noticiaRepository = NoticiaRepositoryFake()
+                ) as T
+            }
         }
     }
 }

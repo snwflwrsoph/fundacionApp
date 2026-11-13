@@ -23,15 +23,13 @@ object Routes {
     const val DETALLE = "detalle/{$ARG_ID}"
     fun detalle(idAnuncio: String) = "detalle/${Uri.encode(idAnuncio)}"
 
-    // Subpantalla de Configuración (sin barra inferior)
-    const val TIPO_USUARIO = "tipo_usuario"
+    // Pantalla de búsqueda y subtramas de configuración
+    const val BUSQUEDA = "busqueda"
+    const val TAMANO_TEXTO = "tamano_texto"
 
     /** Rutas donde se muestra la barra superior (logo, buscar, notificaciones). */
     val CON_BARRA_SUPERIOR = setOf(INICIO, GUARDADOS)
 
     /** Rutas donde se muestra la barra inferior. */
     val CON_BARRA_INFERIOR = setOf(INICIO, GUARDADOS, CONFIGURACION)
-
-    /** Rutas que usan el fondo lavanda de Configuración. */
-    val FONDO_CONFIGURACION = setOf(CONFIGURACION, TIPO_USUARIO)
 }

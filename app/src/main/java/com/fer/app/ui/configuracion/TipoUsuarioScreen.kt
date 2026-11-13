@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fer.app.R
 import com.fer.app.model.TipoUsuario
+import com.fer.app.ui.theme.FerTheme
 
 @Composable
 fun TipoUsuarioScreen(
@@ -43,7 +44,7 @@ fun TipoUsuarioScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorResource(R.color.fondo_pantalla))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Row(
             modifier = Modifier
@@ -151,7 +152,7 @@ private fun Divisor() {
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun TipoUsuarioScreenPreview() {
-    MaterialTheme {
+    FerTheme {
         TipoUsuarioScreen(seleccion = TipoUsuario.ASPIRANTE, onSeleccionChange = {})
     }
 }

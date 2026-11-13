@@ -1,37 +1,42 @@
 package com.fer.app.ui.onboarding
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
 import com.fer.app.R
 import com.fer.app.model.NivelEducativo
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.delay
-
-
-private val azulFER = Color(0xFF172958)
-private val grisSeleccion = Color(0xFFD5D5D5)
-private val azulClaro = Color(0xFF9FD5E8)
+import com.fer.app.ui.theme.FerCeleste
+import com.fer.app.ui.theme.FerFontFamily
+import com.fer.app.ui.theme.FerNavy
 
 @Composable
 fun NivelEducativoScreen(
@@ -40,119 +45,100 @@ fun NivelEducativoScreen(
     onRegresar: () -> Unit = {},
     onContinuar: (NivelEducativo) -> Unit = {}
 ) {
-
     var nivelSeleccionado by remember {
-        mutableStateOf<NivelEducativo?>(null)
-    }
-
-    var confirmando by remember {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(confirmando) {
-        if (confirmando) {
-            delay(600)
-            nivelSeleccionado?.let(onContinuar)
-        }
+        mutableStateOf<NivelEducativo?>(seleccionInicial)
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(horizontal = 35.dp),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 40.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        Spacer(modifier = Modifier.height(35.dp))
-
+        // ---------- Encabezado ----------
+        Spacer(modifier = Modifier.height(32.dp))
         Text(
             text = "Bienvenido",
-            fontSize = 23.sp,
+            fontFamily = FerFontFamily,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = azulFER
+            color = MaterialTheme.colorScheme.onBackground
         )
+        Spacer(modifier = Modifier.height(20.dp))
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                text = "Selecciona tu nivel educativo",
+                fontFamily = FerFontFamily,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Box(
+                modifier = Modifier
+                    .width(38.dp)
+                    .height(4.dp)
+                    .background(FerCeleste, RoundedCornerShape(2.dp))
+            )
+        }
 
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Text(
-            text = "Selecciona tu nivel educativo",
-            fontSize = 15.sp,
-            color = azulFER
-        )
-
-        Spacer(
+        // ---------- Tarjetas ----------
+        LazyColumn(
             modifier = Modifier
-                .width(32.dp)
-                .height(3.dp)
-                .background(azulClaro)
-        )
-
-        Spacer(modifier = Modifier.height(110.dp))
-
-        OpcionNivel(
-            titulo = "Preparatoria",
-            descripcion = "Accede a avisos, convocatorias y beneficios educativos para becarios FER.",
-            icono = R.drawable.backpack,
-            seleccionado = nivelSeleccionado == NivelEducativo.PREPARATORIA,
-            mostrarPalomita = confirmando &&
-                    nivelSeleccionado == NivelEducativo.PREPARATORIA,
-            onClick = {
-                if (!confirmando) {
-                    nivelSeleccionado = NivelEducativo.PREPARATORIA
-                    confirmando = true
-                }
+                .fillMaxWidth()
+                .weight(1f),
+            contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+        ) {
+            item {
+                OpcionCard(
+                    titulo = "Preparatoria",
+                    descripcion = "Accede a avisos, convocatorias y beneficios educativos para becarios FER.",
+                    icono = R.drawable.backpack,
+                    seleccionado = nivelSeleccionado == NivelEducativo.PREPARATORIA,
+                    onClick = { nivelSeleccionado = NivelEducativo.PREPARATORIA }
+                )
             }
-        )
-
-        Spacer(modifier = Modifier.height(22.dp))
-
-        OpcionNivel(
-            titulo = "Universidad",
-            descripcion = "Convocatorias y avisos para futuros becarios.",
-            icono = R.drawable.education,
-            seleccionado = nivelSeleccionado == NivelEducativo.UNIVERSIDAD,
-            onClick = {
-                if (!confirmando) {
-                    nivelSeleccionado = NivelEducativo.UNIVERSIDAD
-                }
+            item {
+                OpcionCard(
+                    titulo = "Universidad",
+                    descripcion = "Convocatorias y avisos para futuros becarios.",
+                    icono = R.drawable.education,
+                    seleccionado = nivelSeleccionado == NivelEducativo.UNIVERSIDAD,
+                    onClick = { nivelSeleccionado = NivelEducativo.UNIVERSIDAD }
+                )
             }
-        )
-
-        Spacer(modifier = Modifier.height(22.dp))
-
-        OpcionNivel(
-            titulo = "Maestría",
-            descripcion = "Convocatorias y avisos para futuros becarios.",
-            icono = R.drawable.airplane,
-            seleccionado = nivelSeleccionado == NivelEducativo.MAESTRIA,
-            mostrarPalomita = confirmando &&
-                    nivelSeleccionado == NivelEducativo.MAESTRIA,
-            onClick = {
-                if (!confirmando) {
-                    nivelSeleccionado = NivelEducativo.MAESTRIA
-                    confirmando = true
-                }
+            item {
+                OpcionCard(
+                    titulo = "Maestría",
+                    descripcion = "Convocatorias y avisos para futuros becarios.",
+                    icono = R.drawable.airplane,
+                    seleccionado = nivelSeleccionado == NivelEducativo.MAESTRIA,
+                    onClick = { nivelSeleccionado = NivelEducativo.MAESTRIA }
+                )
             }
-        )
+        }
 
-        Spacer(modifier = Modifier.height(45.dp))
-
+        // ---------- Botones ----------
+        val esFinDeFlujo = nivelSeleccionado == NivelEducativo.PREPARATORIA || nivelSeleccionado == NivelEducativo.MAESTRIA
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BotonNivel("←") {
-                if (!confirmando) {
-                    onRegresar()
-                }
-            }
+            BotonCircular(
+                icono = FlechaIzquierdaIcon,
+                descripcion = "Regresar",
+                habilitado = true,
+                onClick = onRegresar
+            )
 
             BotonSiguienteFER(
-                habilitado = nivelSeleccionado == NivelEducativo.UNIVERSIDAD &&
-                        !confirmando,
+                habilitado = nivelSeleccionado != null,
+                esUltimoPaso = esFinDeFlujo,
                 onClick = {
                     nivelSeleccionado?.let(onContinuar)
                 }
@@ -162,142 +148,19 @@ fun NivelEducativoScreen(
 }
 
 @Composable
-
-private fun OpcionNivel(
-    titulo: String,
+private fun BotonCircular(
+    icono: ImageVector,
     descripcion: String,
-    icono: Int,
-    seleccionado: Boolean,
-    mostrarPalomita: Boolean = false,
+    habilitado: Boolean,
     onClick: () -> Unit
 ) {
-    Row(
+    IconButton(
+        onClick = onClick,
+        enabled = habilitado,
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 68.dp)
-            .background(
-                if (seleccionado)
-                    grisSeleccion else Color.White,
-                RoundedCornerShape(17.dp)
-            )
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .size(56.dp)
+            .background(if (habilitado) FerNavy else Color(0xFFD0D5E0), CircleShape)
     ) {
-
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    azulFER,
-                    RoundedCornerShape(9.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = icono),
-                contentDescription = titulo,
-                modifier = Modifier.size(30.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = titulo,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = azulFER
-            )
-
-            Text(
-                text = descripcion,
-                fontSize = 8.sp,
-                lineHeight = 11.sp,
-                color = azulFER
-            )
-        }
-
-
-        if (mostrarPalomita) {
-            Icon(
-                imageVector = PalomitaIcon,
-                contentDescription = "Selección confirmada",
-                tint = azulFER,
-                modifier = Modifier.size(32.dp)
-            )
-        } else {
-            RadioButton(
-                selected = seleccionado,
-                onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = azulFER,
-                    unselectedColor = azulFER
-                )
-            )
-        }
+        Icon(imageVector = icono, contentDescription = descripcion, tint = Color.White)
     }
 }
-
-
-@Composable
-private fun BotonNivel(
-    simbolo: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.size(48.dp),
-        shape = CircleShape,
-        color = azulFER,
-        onClick = onClick
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Canvas(modifier = Modifier.size(26.dp)) {
-                val izquierda = simbolo == "←"
-                val centroY = size.height / 2f
-
-                val puntaX = if (izquierda)
-                    size.width * 0.2f
-                else
-                    size.width * 0.8f
-
-                val direccion = if (izquierda) 1f else -1f
-                val grosor = 2.5.dp.toPx()
-                val largo = size.width * 0.28f
-
-                drawLine(
-                    color = Color.White,
-                    start = Offset(size.width * 0.2f, centroY),
-                    end = Offset(size.width * 0.8f, centroY),
-                    strokeWidth = grosor,
-                    cap = StrokeCap.Round
-                )
-
-                drawLine(
-                    color = Color.White,
-                    start = Offset(
-                        puntaX + direccion * largo,
-                        size.height * 0.25f
-                    ),
-                    end = Offset(puntaX, centroY),
-                    strokeWidth = grosor,
-                    cap = StrokeCap.Round
-                )
-
-                drawLine(
-                    color = Color.White,
-                    start = Offset(puntaX, centroY),
-                    end = Offset(
-                        puntaX + direccion * largo,
-                        size.height * 0.75f
-                    ),
-                    strokeWidth = grosor,
-                    cap = StrokeCap.Round
-                )
-            }
-        }
-    }
-}
-

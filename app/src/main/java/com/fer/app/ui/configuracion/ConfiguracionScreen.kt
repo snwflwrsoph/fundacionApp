@@ -10,23 +10,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -35,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fer.app.R
 import com.fer.app.model.AjustesApp
-
+import com.fer.app.ui.theme.FerTheme
 
 @Composable
 fun ConfiguracionScreen(
@@ -45,8 +39,6 @@ fun ConfiguracionScreen(
     onModoOscuroChange: (Boolean) -> Unit = {},
     onLectorPantallaChange: (Boolean) -> Unit = {},
     onCompartirDatosChange: (Boolean) -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onTipoUsuarioClick: () -> Unit = {},
     onTamanoTextoClick: () -> Unit = {},
     onPermisosClick: () -> Unit = {},
     onReportarProblemaClick: () -> Unit = {}
@@ -54,34 +46,19 @@ fun ConfiguracionScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorResource(R.color.fondo_pantalla))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(48.dp),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = colorResource(R.color.fondo_boton_atras),
-                    contentColor = colorResource(R.color.azul_principal)
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.regresar)
-                )
-            }
             Text(
                 text = stringResource(R.string.titulo),
                 modifier = Modifier.align(Alignment.Center),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Medium,
-                color = colorResource(R.color.texto)
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
 
@@ -96,14 +73,6 @@ fun ConfiguracionScreen(
                     subtitulo = stringResource(R.string.notificaciones_subtitulo),
                     checked = ajustes.notificaciones,
                     onCheckedChange = onNotificacionesChange
-                )
-            }
-            item { Divisor() }
-            item {
-                Item(
-                    titulo = stringResource(R.string.tipo_usuario_titulo),
-                    subtitulo = stringResource(R.string.tipo_usuario_subtitulo),
-                    onClick = onTipoUsuarioClick
                 )
             }
             item { Divisor() }
@@ -161,7 +130,7 @@ fun ConfiguracionScreen(
                         .clickable { onReportarProblemaClick() }
                         .padding(horizontal = 28.dp, vertical = 12.dp),
                     fontSize = 16.sp,
-                    color = colorResource(R.color.texto),
+                    color = MaterialTheme.colorScheme.onBackground,
                     textDecoration = TextDecoration.Underline
                 )
             }
@@ -179,7 +148,7 @@ private fun SeccionTitulo(texto: String) {
             .padding(start = 28.dp, end = 28.dp, top = 28.dp, bottom = 12.dp),
         fontSize = 24.sp,
         fontWeight = FontWeight.Normal,
-        color = colorResource(R.color.texto)
+        color = MaterialTheme.colorScheme.onBackground
     )
 }
 
@@ -202,25 +171,17 @@ private fun ItemSwitch(
             Text(
                 text = titulo,
                 fontSize = 18.sp,
-                color = colorResource(R.color.texto)
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = subtitulo,
                 fontSize = 14.sp,
-                color = colorResource(R.color.subtitulo)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = colorResource(R.color.blanco),
-                checkedTrackColor = colorResource(R.color.azul_principal),
-                checkedBorderColor = colorResource(R.color.azul_principal),
-                uncheckedThumbColor = colorResource(R.color.switch_off_thumb),
-                uncheckedTrackColor = colorResource(R.color.switch_off_track),
-                uncheckedBorderColor = colorResource(R.color.switch_off_thumb)
-            )
+            onCheckedChange = onCheckedChange
         )
     }
 }
@@ -243,18 +204,18 @@ private fun Item(
             Text(
                 text = titulo,
                 fontSize = 18.sp,
-                color = colorResource(R.color.texto)
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = subtitulo,
                 fontSize = 14.sp,
-                color = colorResource(R.color.subtitulo)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = colorResource(R.color.texto)
+            tint = MaterialTheme.colorScheme.onBackground
         )
     }
 }
@@ -263,14 +224,14 @@ private fun Item(
 private fun Divisor() {
     HorizontalDivider(
         thickness = 1.dp,
-        color = colorResource(R.color.divisor)
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
     )
 }
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun ConfiguracionScreenPreview() {
-    MaterialTheme {
+    FerTheme {
         ConfiguracionScreen(ajustes = AjustesApp())
     }
 }

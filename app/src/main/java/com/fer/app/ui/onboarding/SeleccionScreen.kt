@@ -3,14 +3,36 @@ package com.fer.app.ui.onboarding
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,40 +49,23 @@ import androidx.compose.ui.unit.sp
 import com.fer.app.R
 import com.fer.app.model.ID_UNIVERSIDAD_OTRA
 import com.fer.app.model.OpcionSeleccion
+import com.fer.app.model.TipoUniversidad
 import com.fer.app.ui.theme.FerCeleste
 import com.fer.app.ui.theme.FerFondoTarjetaSeleccionada
 import com.fer.app.ui.theme.FerFontFamily
 import com.fer.app.ui.theme.FerNavy
 import com.fer.app.ui.theme.FerTheme
-import kotlinx.coroutines.delay
-import com.fer.app.model.TipoUniversidad
 
 @Composable
-
 fun SeleccionScreen(
     opciones: List<OpcionSeleccion>,
     onContinuar: (Int, String) -> Unit,
     onRegresar: () -> Unit,
     modifier: Modifier = Modifier,
-    esUltimaPantalla: Boolean = false,
-    confirmarAutomaticamente: Boolean = false
+    esUltimaPantalla: Boolean = false
 ) {
     var seleccionadoId by rememberSaveable { mutableStateOf<Int?>(null) }
     var otraUniversidadTexto by rememberSaveable { mutableStateOf("") }
-    var confirmando by remember { mutableStateOf(false) }
-
-    LaunchedEffect(confirmando) {
-        if (confirmando) {
-            delay(600)
-
-            seleccionadoId?.let { id ->
-                onContinuar(
-                    id,
-                    if (id == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
-                )
-            }
-        }
-    }
 
     val puedeContinuar = when {
         seleccionadoId == null -> false
@@ -71,7 +76,7 @@ fun SeleccionScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 40.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -82,16 +87,15 @@ fun SeleccionScreen(
             fontFamily = FerFontFamily,
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = FerNavy
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(20.dp))
-        // La línea celeste va alineada a la IZQUIERDA del subtítulo (como en Figma)
         Column(horizontalAlignment = Alignment.Start) {
             Text(
                 text = "Selecciona quién eres",
                 fontFamily = FerFontFamily,
                 fontSize = 20.sp,
-                color = FerNavy
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(2.dp))
             Box(
@@ -102,12 +106,11 @@ fun SeleccionScreen(
             )
         }
 
-        // ---------- Tarjetas (centradas verticalmente) ----------
+        // ---------- Tarjetas ----------
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            // padding para que la sombra no se corte
             contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
         ) {
@@ -116,21 +119,7 @@ fun SeleccionScreen(
 
                 Column {
                     Card(
-                        onClick = {
-                            if (!confirmando) {
-                                seleccionadoId = opcion.id
-
-                                if (confirmarAutomaticamente &&
-                                    (
-                                            (esUltimaPantalla && opcion.id != ID_UNIVERSIDAD_OTRA) ||
-                                                    (!esUltimaPantalla && opcion.id == TipoUniversidad.PUBLICA.id)
-                                            )
-                                ) {
-                                    confirmando = true
-                                }
-
-                            }
-                        },
+                        onClick = { seleccionadoId = opcion.id },
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (estaSeleccionado) FerFondoTarjetaSeleccionada else Color.White
@@ -172,43 +161,20 @@ fun SeleccionScreen(
                                     fontFamily = FerFontFamily,
                                     fontSize = 11.sp,
                                     lineHeight = 14.sp,
-                                    color = FerNavy // en Figma la descripción es azul, no gris
+                                    color = FerNavy
                                 )
                             }
 
                             Spacer(modifier = Modifier.width(4.dp))
 
-                            if (estaSeleccionado && confirmando) {
-                                Icon(
-                                    imageVector = PalomitaIcon,
-                                    contentDescription = "Selección confirmada",
-                                    tint = FerNavy,
-                                    modifier = Modifier.size(32.dp)
+                            RadioButton(
+                                selected = estaSeleccionado,
+                                onClick = { seleccionadoId = opcion.id },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = FerNavy,
+                                    unselectedColor = FerNavy
                                 )
-                            } else {
-                                RadioButton(
-                                    selected = estaSeleccionado,
-                                    onClick = {
-                                        if (!confirmando) {
-                                            seleccionadoId = opcion.id
-
-                                            if (confirmarAutomaticamente &&
-                                                (
-                                                        (esUltimaPantalla && opcion.id != ID_UNIVERSIDAD_OTRA) ||
-                                                                (!esUltimaPantalla && opcion.id == TipoUniversidad.PUBLICA.id)
-                                                        )
-                                            ) {
-                                                confirmando = true
-                                            }
-
-                                        }
-                                    },
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = FerNavy,
-                                        unselectedColor = FerNavy
-                                    )
-                                )
-                            }
+                            )
                         }
                     }
 
@@ -228,6 +194,8 @@ fun SeleccionScreen(
         }
 
         // ---------- Botones ----------
+        val esFinDeFlujo = esUltimaPantalla || seleccionadoId == TipoUniversidad.PUBLICA.id
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -238,38 +206,22 @@ fun SeleccionScreen(
             BotonCircular(
                 icono = FlechaIzquierdaIcon,
                 descripcion = "Regresar",
-                habilitado = !confirmando,
+                habilitado = true,
+                onClick = onRegresar
+            )
+
+            BotonSiguienteFER(
+                habilitado = puedeContinuar,
+                esUltimoPaso = esFinDeFlujo,
                 onClick = {
-                    if (!confirmando) {
-                        onRegresar()
+                    seleccionadoId?.let { id ->
+                        onContinuar(
+                            id,
+                            if (id == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
+                        )
                     }
                 }
             )
-
-            if (esUltimaPantalla) {
-                BotonCircular(
-                    icono = PalomitaIcon,
-                    descripcion = "Confirmar",
-                    habilitado = puedeContinuar && !confirmando,
-                    onClick = {
-                        if (puedeContinuar && !confirmando) {
-                            confirmando = true
-                        }
-                    }
-                )
-            } else {
-                BotonSiguienteFER(
-                    habilitado = puedeContinuar && !confirmando,
-                    onClick = {
-                        seleccionadoId?.let { id ->
-                            onContinuar(
-                                id,
-                                if (id == ID_UNIVERSIDAD_OTRA) otraUniversidadTexto else ""
-                            )
-                        }
-                    }
-                )
-            }
         }
     }
 }
@@ -291,38 +243,6 @@ private fun BotonCircular(
         Icon(imageVector = icono, contentDescription = descripcion, tint = Color.White)
     }
 }
-
-val FlechaIzquierdaIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "FlechaIzquierda",
-        defaultWidth = 24.dp, defaultHeight = 24.dp,
-        viewportWidth = 24f, viewportHeight = 24f
-    ).path(fill = SolidColor(Color.White), pathFillType = PathFillType.NonZero) {
-        moveTo(20f, 11f); horizontalLineTo(7.83f); lineTo(13.42f, 5.41f); lineTo(12f, 4f)
-        lineTo(4f, 12f); lineTo(12f, 20f); lineTo(13.41f, 18.59f); lineTo(7.83f, 13f)
-        horizontalLineTo(20f); verticalLineTo(11f); close()
-    }.build()
-
-val FlechaDerechaIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "FlechaDerecha",
-        defaultWidth = 24.dp, defaultHeight = 24.dp,
-        viewportWidth = 24f, viewportHeight = 24f
-    ).path(fill = SolidColor(Color.White), pathFillType = PathFillType.NonZero) {
-        moveTo(12f, 4f); lineTo(10.59f, 5.41f); lineTo(16.17f, 11f); horizontalLineTo(4f)
-        verticalLineTo(13f); horizontalLineTo(16.17f); lineTo(10.59f, 18.59f); lineTo(12f, 20f)
-        lineTo(20f, 12f); lineTo(12f, 4f); close()
-    }.build()
-
-val PalomitaIcon: ImageVector
-    get() = ImageVector.Builder(
-        name = "Palomita",
-        defaultWidth = 24.dp, defaultHeight = 24.dp,
-        viewportWidth = 24f, viewportHeight = 24f
-    ).path(fill = SolidColor(Color.White), pathFillType = PathFillType.NonZero) {
-        moveTo(9f, 16.17f); lineTo(4.83f, 12f); lineTo(3.41f, 13.41f); lineTo(9f, 19f)
-        lineTo(21f, 7f); lineTo(19.59f, 5.59f); close()
-    }.build()
 
 @Preview(showBackground = true, widthDp = 411, heightDp = 891)
 @Composable

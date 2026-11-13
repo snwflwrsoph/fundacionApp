@@ -15,10 +15,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.colorResource
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,21 +25,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.fer.app.R
 import com.fer.app.model.NivelEducativo
 import com.fer.app.model.Noticia
 import com.fer.app.model.TipoUniversidad
 import com.fer.app.navigation.Routes
+import com.fer.app.ui.buscar.BuscarScreen
 import com.fer.app.ui.components.AppBottomBar
 import com.fer.app.ui.components.AppTopBar
 import com.fer.app.ui.components.BottomDestination
 import com.fer.app.ui.configuracion.ConfiguracionScreen
-import com.fer.app.ui.configuracion.TipoUsuarioScreen
+import com.fer.app.ui.configuracion.TamanoTextoScreen
 import com.fer.app.ui.inicio.GuardadosScreen
 import com.fer.app.ui.inicio.HomeScreen
+import com.fer.app.ui.noticia.NoticiaScreen
 import com.fer.app.ui.onboarding.NivelEducativoScreen
 import com.fer.app.ui.onboarding.PreferenciasScreen
-import com.fer.app.ui.noticia.NoticiaScreen
 import com.fer.app.ui.onboarding.SeleccionScreen
 
 /**
@@ -123,15 +121,11 @@ fun FerApp(viewModel: AppViewModel) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = when {
-            rutaActual in Routes.FONDO_CONFIGURACION -> colorResource(R.color.fondo_pantalla)
-            mostrarBarraInferior -> MaterialTheme.colorScheme.background
-            else -> Color.White
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             if (mostrarBarraSuperior) {
                 AppTopBar(
-                    onSearchClick = { pantallaPendiente("Búsqueda") },
+                    onSearchClick = { navController.navigate(Routes.BUSQUEDA) },
                     onNotificationsClick = { pantallaPendiente("Notificaciones") }
                 )
             }
@@ -180,7 +174,6 @@ fun FerApp(viewModel: AppViewModel) {
             composable(Routes.TIPO_UNIVERSIDAD) {
                 SeleccionScreen(
                     opciones = catalogo.tiposUniversidad,
-                    confirmarAutomaticamente = true,
                     onRegresar = { navController.popBackStack() },
                     onContinuar = { id, _ ->
                         TipoUniversidad.deId(id)?.let { tipo ->
@@ -205,7 +198,6 @@ fun FerApp(viewModel: AppViewModel) {
                 SeleccionScreen(
                     opciones = catalogo.universidades[tipo].orEmpty(),
                     esUltimaPantalla = true,
-                    confirmarAutomaticamente = true,
                     onRegresar = { navController.popBackStack() },
                     onContinuar = { id, textoOtra ->
                         viewModel.seleccionarUniversidad(id, textoOtra)
@@ -259,19 +251,27 @@ fun FerApp(viewModel: AppViewModel) {
                     onModoOscuroChange = viewModel::cambiarModoOscuro,
                     onLectorPantallaChange = viewModel::cambiarLectorPantalla,
                     onCompartirDatosChange = viewModel::cambiarCompartirDatos,
-                    onBackClick = { navController.irAPestana(Routes.INICIO) },
-                    onTipoUsuarioClick = { navController.navigate(Routes.TIPO_USUARIO) },
-                    // Estas tres no tienen pantalla diseñada todavía.
-                    onTamanoTextoClick = { pantallaPendiente() },
+                    onTamanoTextoClick = { navController.navigate(Routes.TAMANO_TEXTO) },
+                    // Estas dos no tienen pantalla diseñada todavía.
                     onPermisosClick = { pantallaPendiente() },
                     onReportarProblemaClick = { pantallaPendiente() }
                 )
             }
-            composable(Routes.TIPO_USUARIO) {
-                TipoUsuarioScreen(
-                    seleccion = perfil.tipoUsuario,
-                    onSeleccionChange = viewModel::seleccionarTipoUsuario,
+            composable(Routes.TAMANO_TEXTO) {
+                TamanoTextoScreen(
+                    seleccion = ajustes.tamanoTexto,
+                    onSeleccionChange = viewModel::cambiarTamanoTexto,
                     onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.BUSQUEDA) {
+                BuscarScreen(
+                    anuncios = anuncios,
+                    onAnnouncementClick = { anuncio ->
+                        navController.navigate(Routes.detalle(anuncio.id))
+                    },
+                    onBackClick = { navController.popBackStack() },
+                    onSaveClick = viewModel::alternarGuardado
                 )
             }
         }
