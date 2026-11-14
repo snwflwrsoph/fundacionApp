@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "54065315118",
+    "project_id": "fer-backend-4d5ba",
+    "storage_bucket": "fer-backend-4d5ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54065315118:android:ef6bcdf2169a734243cebf",
+        "android_client_info": {
+          "package_name": "com.fer.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtZh58Na6ASKVcwz4WZb6_88ovb6x23W8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
