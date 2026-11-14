@@ -228,16 +228,15 @@ fun FerApp(viewModel: AppViewModel) {
             ) { entrada ->
                 val id = entrada.arguments?.getString(Routes.ARG_ID).orEmpty()
                 val anuncio = anuncios.firstOrNull { it.id == id }
-                val noticia = anuncios[id.toInt()]
 
                 // Pide el detalle al abrir (con backend aquí se haría la llamada).
                 LaunchedEffect(id, anuncio != null) {
                     anuncio?.let(viewModel::cargarNoticia)
                 }
 
-                if (noticia != null) {
+                if (anuncio != null) {
                     NewsDetailScreen(
-                        announcement = noticia,
+                        announcement = anuncio,
                         onBack = { navController.popBackStack() },
                         onLikeClick = { viewModel.alternarLikeNoticia(id) },
                         onSaveClick = { viewModel.alternarGuardarCalendarioNoticia(id) }
