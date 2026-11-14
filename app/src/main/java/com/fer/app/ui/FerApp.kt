@@ -37,7 +37,7 @@ import com.fer.app.ui.configuracion.ConfiguracionScreen
 import com.fer.app.ui.configuracion.TamanoTextoScreen
 import com.fer.app.ui.inicio.GuardadosScreen
 import com.fer.app.ui.inicio.HomeScreen
-import com.fer.app.ui.noticia.NoticiaScreen
+import com.fer.app.ui.noticia.NewsDetailScreen
 import com.fer.app.ui.onboarding.NivelEducativoScreen
 import com.fer.app.ui.onboarding.PreferenciasScreen
 import com.fer.app.ui.onboarding.SeleccionScreen
@@ -228,7 +228,7 @@ fun FerApp(viewModel: AppViewModel) {
             ) { entrada ->
                 val id = entrada.arguments?.getString(Routes.ARG_ID).orEmpty()
                 val anuncio = anuncios.firstOrNull { it.id == id }
-                val noticia = noticias[id]
+                val noticia = anuncios[id.toInt()]
 
                 // Pide el detalle al abrir (con backend aquí se haría la llamada).
                 LaunchedEffect(id, anuncio != null) {
@@ -236,8 +236,8 @@ fun FerApp(viewModel: AppViewModel) {
                 }
 
                 if (noticia != null) {
-                    NoticiaScreen(
-                        noticia = noticia,
+                    NewsDetailScreen(
+                        announcement = noticia,
                         onBack = { navController.popBackStack() },
                         onLikeClick = { viewModel.alternarLikeNoticia(id) },
                         onSaveClick = { viewModel.alternarGuardarCalendarioNoticia(id) }

@@ -11,21 +11,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +35,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.fer.app.data.fake.FakeAnnouncements
 import com.fer.app.data.fake.FakeNoticias
+import com.fer.app.model.Announcement
 import com.fer.app.model.Noticia
 import com.fer.app.ui.theme.FerGrisAzulado
 import com.fer.app.ui.theme.FerNavy
@@ -48,8 +46,8 @@ import com.fer.app.ui.theme.FerTheme
 import com.fer.app.ui.theme.GoogleSansFlex
 
 @Composable
-fun NoticiaScreen(
-    noticia: Noticia,
+fun NewsDetailScreen(
+    announcement: Announcement,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onLikeClick: () -> Unit = {},
@@ -85,8 +83,8 @@ fun NoticiaScreen(
 
         // Imagen principal
         Image(
-            painter = painterResource(noticia.imagenPrincipal),
-            contentDescription = "Imagen de ${noticia.titulo}",
+            painter = painterResource(announcement.mainImage),
+            contentDescription = "Imagen de ${announcement.title}",
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,7 +95,7 @@ fun NoticiaScreen(
 
         // Título
         Text(
-            text = noticia.titulo,
+            text = announcement.title,
             style = MaterialTheme.typography.headlineSmall,
             color = FerNavy,
             fontFamily = GoogleSansFlex,
@@ -115,15 +113,15 @@ fun NoticiaScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(noticia.perfil),
-                    contentDescription = "Imagen de perfil de ${noticia.autor}",
+                    painter = painterResource(announcement.profile),
+                    contentDescription = "Imagen de perfil de ${announcement.author}",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(50))
                 )
                 Text(
-                    text = noticia.autor,
+                    text = announcement.author,
                     style = MaterialTheme.typography.labelSmall,
                     color = FerGrisAzulado,
                     fontFamily = GoogleSansFlex,
@@ -132,7 +130,7 @@ fun NoticiaScreen(
                 )
             }
             Text(
-                text = noticia.fecha,
+                text = announcement.date,
                 style = MaterialTheme.typography.labelSmall,
                 color = FerGrisAzulado,
                 fontFamily = GoogleSansFlex,
@@ -142,7 +140,7 @@ fun NoticiaScreen(
 
         // Texto
         Text(
-            text = noticia.descripcion,
+            text = announcement.description,
             style = MaterialTheme.typography.bodyMedium,
             color = FerNavy,
             fontFamily = GoogleSansFlex,
@@ -159,8 +157,8 @@ fun NoticiaScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(noticia.imagenSecundaria),
-                contentDescription = "Imagen de ${noticia.titulo}",
+                painter = painterResource(announcement.secondaryImage),
+                contentDescription = "Imagen de ${announcement.title}",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .weight(1f)
@@ -168,8 +166,8 @@ fun NoticiaScreen(
                     .clip(RoundedCornerShape(24.dp))
             )
             Image(
-                painter = painterResource(noticia.imagenTerciaria),
-                contentDescription = "Imagen de ${noticia.titulo}",
+                painter = painterResource(announcement.tertiaryImage),
+                contentDescription = "Imagen de ${announcement.title}",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .weight(1f)
@@ -187,11 +185,11 @@ fun NoticiaScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconToggleButton(
-                checked = noticia.isLikedByUser,
+                checked = announcement.isLikedByUser,
                 onCheckedChange = { onLikeClick() }
             ) {
                 Icon(
-                    imageVector = if (noticia.isLikedByUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    imageVector = if (announcement.isLikedByUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Me gusta",
                     tint = FerNavy,
                     modifier = Modifier.size(18.dp)
@@ -199,17 +197,17 @@ fun NoticiaScreen(
             }
 
             Text(
-                text = noticia.likes.toString(),
+                text = announcement.likes.toString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = FerNavy
             )
 
             IconToggleButton(
-                checked = noticia.isSavedOnCalendar,
+                checked = announcement.isSavedOnCalendar,
                 onCheckedChange = { onSaveClick() }
             ) {
                 Icon(
-                    imageVector = if (noticia.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
+                    imageVector = if (announcement.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
                     contentDescription = "Agregar a calendario",
                     tint = FerNavy,
                     modifier = Modifier.size(18.dp)
@@ -229,8 +227,8 @@ fun NoticiaScreen(
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 1200)
 @Composable
-private fun NoticiaScreenPreview() {
+private fun NewScreenPreview() {
     FerTheme {
-        NoticiaScreen(noticia = FakeNoticias.ejemplo)
+        NewsDetailScreen(announcement = FakeAnnouncements.all[0])
     }
 }
