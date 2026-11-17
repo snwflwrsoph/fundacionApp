@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +45,7 @@ import com.fer.app.ui.theme.FerTheme
 import com.fer.app.ui.theme.GoogleSansFlex
 import coil.compose.AsyncImage
 import com.fer.app.R
+import com.fer.app.model.AnnouncementCategory
 import com.fer.app.ui.components.AnnouncementImage
 import com.fer.app.ui.components.placeholderColor
 
@@ -209,24 +211,26 @@ fun NewsDetailScreen(
                 style = MaterialTheme.typography.labelLarge,
                 color = FerNavy
             )
+            if(announcement.category == AnnouncementCategory.EVENTS) {
+                IconToggleButton(
+                    checked = announcement.isSavedOnCalendar,
+                    onCheckedChange = { onSaveClick() }
+                ) {
+                    Icon(
+                        imageVector = if (announcement.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
+                        contentDescription = "Agregar a calendario",
+                        tint = FerNavy,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
 
-            IconToggleButton(
-                checked = announcement.isSavedOnCalendar,
-                onCheckedChange = { onSaveClick() }
-            ) {
-                Icon(
-                    imageVector = if (announcement.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
-                    contentDescription = "Agregar a calendario",
-                    tint = FerNavy,
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = "Agregar a calendario",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = FerNavy
                 )
             }
 
-            Text(
-                text = "Agregar a calendario",
-                style = MaterialTheme.typography.labelLarge,
-                color = FerNavy
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -264,6 +268,18 @@ private fun AutorFoto(
             modifier = modifier
         )
     }
+}
+
+@Composable
+fun AsyncImage(
+    model: String,
+    contentDescription: String,
+    contentScale: ContentScale,
+    modifier: Modifier,
+    placeholder: Painter,
+    error: Painter
+) {
+    TODO("Not yet implemented")
 }
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 1200)
