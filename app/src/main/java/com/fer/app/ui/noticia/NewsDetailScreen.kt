@@ -36,14 +36,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fer.app.data.fake.FakeAnnouncements
-import com.fer.app.data.fake.FakeNoticias
 import com.fer.app.model.Announcement
-import com.fer.app.model.Noticia
 import com.fer.app.ui.theme.FerGrisAzulado
 import com.fer.app.ui.theme.FerNavy
 import com.fer.app.ui.theme.FerBotones
 import com.fer.app.ui.theme.FerTheme
 import com.fer.app.ui.theme.GoogleSansFlex
+import coil.compose.AsyncImage
+import com.fer.app.R
+import com.fer.app.ui.components.AnnouncementImage
+import com.fer.app.ui.components.placeholderColor
 
 @Composable
 fun NewsDetailScreen(
@@ -82,10 +84,10 @@ fun NewsDetailScreen(
         }
 
         // Imagen principal
-        Image(
-            painter = painterResource(announcement.mainImage),
-            contentDescription = "Imagen de ${announcement.title}",
-            contentScale = ContentScale.Crop,
+        AnnouncementImage(
+            imageRes = announcement.mainImage,
+            imageUrl = announcement.imageUrl,
+            placeholderColor = announcement.category.placeholderColor(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
@@ -112,10 +114,10 @@ fun NewsDetailScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(announcement.profile),
-                    contentDescription = "Imagen de perfil de ${announcement.author}",
-                    contentScale = ContentScale.Crop,
+                AutorFoto(
+                    res = announcement.profile,
+                    url = announcement.profileUrl,
+                    descripcion = "Imagen de perfil de ${announcement.author}",
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(50))
@@ -148,32 +150,38 @@ fun NewsDetailScreen(
             modifier = Modifier.padding(24.dp)
         )
 
-        // Fotos secundarias
-        Row(
+        // Fotos secundarias (locales o por URL), de dos en dos
+        val secundarias: List<Pair<Int?, String?>> = buildList {
+            announcement.secondaryImage?.let { add(it to null) }
+            announcement.tertiaryImage?.let { add(it to null) }
+            announcement.secondaryImageUrls.forEach { add(null to it) }
+        }
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Image(
-                painter = painterResource(announcement.secondaryImage),
-                contentDescription = "Imagen de ${announcement.title}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(24.dp))
-            )
-            Image(
-                painter = painterResource(announcement.tertiaryImage),
-                contentDescription = "Imagen de ${announcement.title}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .weight(1f)
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(24.dp))
-            )
+            secundarias.chunked(2).forEach { fila ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    fila.forEach { (res, url) ->
+                        AnnouncementImage(
+                            imageRes = res,
+                            imageUrl = url,
+                            placeholderColor = announcement.category.placeholderColor(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(24.dp))
+                        )
+                    }
+                    if (fila.size == 1) Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
 
         // Botones de interacción
@@ -222,6 +230,39 @@ fun NewsDetailScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+@Composable
+private fun AutorFoto(
+    res: Int?,
+    url: String?,
+    descripcion: String,
+    modifier: Modifier = Modifier,
+) {
+    val logo = painterResource(R.drawable.fer_logo)
+    when {
+        res != null -> Image(
+            painter = painterResource(res),
+            contentDescription = descripcion,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+        )
+
+        !url.isNullOrBlank() -> AsyncImage(
+            model = url,
+            contentDescription = descripcion,
+            contentScale = ContentScale.Crop,
+            modifier = modifier,
+            placeholder = logo,
+            error = logo,
+        )
+
+        else -> Image(
+            painter = logo,
+            contentDescription = descripcion,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+        )
     }
 }
 

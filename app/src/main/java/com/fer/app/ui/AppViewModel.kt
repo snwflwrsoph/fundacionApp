@@ -1,6 +1,7 @@
 package com.fer.app.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -9,45 +10,57 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.fer.app.data.AjustesRepository
 import com.fer.app.data.AnnouncementRepository
 import com.fer.app.data.CatalogoRepository
-import com.fer.app.data.NoticiaRepository
 import com.fer.app.data.PerfilRepository
 import com.fer.app.data.fake.AjustesRepositoryPrefs
-import com.fer.app.data.fake.AnnouncementRepositoryPrefs
 import com.fer.app.data.fake.CatalogoRepositoryFake
-import com.fer.app.data.fake.NoticiaRepositoryFake
 import com.fer.app.data.fake.PerfilRepositoryPrefs
+import com.fer.app.data.firebase.AnnouncementRepositoryFirestore
+import com.fer.app.data.firebase.normalizar
 import com.fer.app.model.AjustesApp
 import com.fer.app.model.Announcement
 import com.fer.app.model.Catalogo
+import com.fer.app.model.EstadoCarga
 import com.fer.app.model.ID_UNIVERSIDAD_OTRA
 import com.fer.app.model.NivelEducativo
-import com.fer.app.model.Noticia
 import com.fer.app.model.PerfilUsuario
 import com.fer.app.model.TamanoTexto
 import com.fer.app.model.TipoUniversidad
 import com.fer.app.model.TipoUsuario
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * Estado compartido de toda la app (perfil, ajustes y catálogos).
- * Las pantallas solo leen estos StateFlow y llaman a sus funciones; no conocen de dónde vienen los datos.
- */
 class AppViewModel(
     application: Application,
     private val perfilRepository: PerfilRepository,
     private val ajustesRepository: AjustesRepository,
     private val catalogoRepository: CatalogoRepository,
-    private val announcementRepository: AnnouncementRepository,
-    private val noticiaRepository: NoticiaRepository
+    private val announcementRepository: AnnouncementRepository
 ) : AndroidViewModel(application) {
 
     val perfil: StateFlow<PerfilUsuario> = perfilRepository.perfil
     val ajustes: StateFlow<AjustesApp> = ajustesRepository.ajustes
-    val anuncios: StateFlow<List<Announcement>> = announcementRepository.anuncios
-    val noticias: StateFlow<Map<String, Noticia>> = noticiaRepository.noticias
+
+    /** Anuncios que ve este usuario: los publicados, filtrados por la audiencia que eligió. */
+    val anuncios: StateFlow<List<Announcement>> = combine(
+        announcementRepository.anuncios,
+        perfilRepository.perfil
+    ) { lista, perfil ->
+        lista.filter { a ->
+            val visible = esParaAudiencia(a, perfil.tipoUsuario)
+            if (!visible) {
+                Log.w("FER", "[${a.id}] '${a.title}' oculto por audiencia ${a.audiences} (usuario=${perfil.tipoUsuario})")
+            }
+            visible
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val estadoAnuncios: StateFlow<EstadoCarga> = announcementRepository.estado
+    val notificacionesLeidas: StateFlow<Set<String>> = announcementRepository.leidas
 
     private val _catalogo = MutableStateFlow(Catalogo())
     val catalogo: StateFlow<Catalogo> = _catalogo.asStateFlow()
@@ -63,7 +76,6 @@ class AppViewModel(
     fun seleccionarNivel(nivel: NivelEducativo) = actualizarPerfil {
         it.copy(
             nivelEducativo = nivel,
-            // Si ya no es universidad, se descartan las respuestas de las pantallas de universidad.
             tipoUniversidad = it.tipoUniversidad.takeIf { nivel == NivelEducativo.UNIVERSIDAD },
             universidadId = it.universidadId.takeIf { nivel == NivelEducativo.UNIVERSIDAD },
             universidadOtra = it.universidadOtra.takeIf { nivel == NivelEducativo.UNIVERSIDAD }
@@ -89,18 +101,23 @@ class AppViewModel(
         viewModelScope.launch { announcementRepository.alternarGuardado(anuncio.id) }
     }
 
-    // ---------- Detalle de anuncio (noticia) ----------
-
-    fun cargarNoticia(anuncio: Announcement) {
-        viewModelScope.launch { noticiaRepository.cargar(anuncio) }
+    fun reintentarCargaAnuncios() {
+        viewModelScope.launch { announcementRepository.reintentar() }
     }
 
-    fun alternarLikeNoticia(id: String) {
-        viewModelScope.launch { noticiaRepository.alternarLike(id) }
+    // ---------- Detalle de anuncio ----------
+
+    fun alternarLike(id: String) {
+        viewModelScope.launch { announcementRepository.alternarLike(id) }
     }
 
-    fun alternarGuardarCalendarioNoticia(id: String) {
-        viewModelScope.launch { noticiaRepository.alternarGuardarCalendario(id) }
+    fun alternarGuardarCalendario(id: String) {
+        viewModelScope.launch { announcementRepository.alternarGuardarCalendario(id) }
+    }
+
+    /** Se llama al abrir un anuncio: su notificación deja de aparecer como nueva. */
+    fun marcarLeida(id: String) {
+        viewModelScope.launch { announcementRepository.marcarLeida(id) }
     }
 
     // ---------- Configuración ----------
@@ -121,8 +138,31 @@ class AppViewModel(
         viewModelScope.launch { ajustesRepository.guardar(transformar(ajustesRepository.ajustes.value)) }
     }
 
+    override fun onCleared() {
+        (announcementRepository as? AutoCloseable)?.close()
+        super.onCleared()
+    }
+
     companion object {
-        /** Único lugar donde se eligen las implementaciones. */
+        /** Lo que dice "becarios" / "aspirantes" en el campo `audiencias` de Firestore. */
+        private fun audienciaDe(tipo: TipoUsuario) = when (tipo) {
+            TipoUsuario.BECARIO -> "becario"
+            TipoUsuario.ASPIRANTE -> "aspirante"
+        }
+
+        /**
+         * Se muestra si no tiene audiencias, si incluye "todos"/"general", o si incluye la del usuario.
+         * Si el usuario aún no elige tipo, ve todo. Ignora mayúsculas, acentos y la "s" final.
+         */
+        private fun esParaAudiencia(anuncio: Announcement, tipo: TipoUsuario?): Boolean {
+            if (tipo == null || anuncio.audiences.isEmpty()) return true
+            val buscada = audienciaDe(tipo)
+            return anuncio.audiences.any {
+                val a = it.normalizar().removeSuffix("s")   // "Becarios" -> "becario", "Todos" -> "todo"
+                a == buscada || a == "todo" || a == "general"
+            }
+        }
+
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
@@ -132,8 +172,8 @@ class AppViewModel(
                     perfilRepository = PerfilRepositoryPrefs(application),
                     ajustesRepository = AjustesRepositoryPrefs(application),
                     catalogoRepository = CatalogoRepositoryFake(),
-                    announcementRepository = AnnouncementRepositoryPrefs(application),
-                    noticiaRepository = NoticiaRepositoryFake()
+                    // Para trabajar sin Firebase: AnnouncementRepositoryFake()
+                    announcementRepository = AnnouncementRepositoryFirestore(application)
                 ) as T
             }
         }

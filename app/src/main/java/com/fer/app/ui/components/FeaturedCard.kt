@@ -67,7 +67,7 @@ fun FeaturedCard(
             color = MaterialTheme.colorScheme.secondary,
         ) {
             Text(
-                text = "DESTACADO · ${announcement.category.label.uppercase()}",
+                text = "DESTACADO · ${announcement.etiqueta.uppercase()}",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondary,

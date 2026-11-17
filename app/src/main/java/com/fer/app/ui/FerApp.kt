@@ -1,8 +1,6 @@
 package com.fer.app.ui
 
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -26,7 +24,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fer.app.model.NivelEducativo
-import com.fer.app.model.Noticia
 import com.fer.app.model.TipoUniversidad
 import com.fer.app.navigation.Routes
 import com.fer.app.ui.buscar.BuscarScreen
@@ -41,6 +38,8 @@ import com.fer.app.ui.noticia.NewsDetailScreen
 import com.fer.app.ui.onboarding.NivelEducativoScreen
 import com.fer.app.ui.onboarding.PreferenciasScreen
 import com.fer.app.ui.onboarding.SeleccionScreen
+import com.fer.app.ui.components.EstadoCargaView
+import com.fer.app.ui.notifications.NotificationScreen
 
 /**
  * Raíz de la app: un solo NavHost con todas las pantallas.
@@ -67,7 +66,8 @@ fun FerApp(viewModel: AppViewModel) {
     val ajustes by viewModel.ajustes.collectAsState()
     val catalogo by viewModel.catalogo.collectAsState()
     val anuncios by viewModel.anuncios.collectAsState()
-    val noticias by viewModel.noticias.collectAsState()
+    val estadoAnuncios by viewModel.estadoAnuncios.collectAsState()
+    val leidas by viewModel.notificacionesLeidas.collectAsState()
 
     val rutaActual = navController.currentBackStackEntryAsState().value?.destination?.route
     val mostrarBarraSuperior = rutaActual in Routes.CON_BARRA_SUPERIOR
@@ -126,7 +126,7 @@ fun FerApp(viewModel: AppViewModel) {
             if (mostrarBarraSuperior) {
                 AppTopBar(
                     onSearchClick = { navController.navigate(Routes.BUSQUEDA) },
-                    onNotificationsClick = { pantallaPendiente("Notificaciones") }
+                    onNotificationsClick = { navController.navigate(Routes.NOTIFICACIONES) }
                 )
             }
         },
@@ -208,12 +208,20 @@ fun FerApp(viewModel: AppViewModel) {
 
             // ---------- App principal ----------
             composable(Routes.INICIO) {
-                HomeScreen(
-                    announcements = anuncios,
-                    onAnnouncementClick = { navController.navigate(Routes.detalle(it.id)) },
-                    onSaveClick = viewModel::alternarGuardado,
-                    onSeeAllClick = { pantallaPendiente("Ver todo") }
-                )
+                if (anuncios.isEmpty()) {
+                    EstadoCargaView(
+                        estado = estadoAnuncios,
+                        textoVacio = "Todavía no hay anuncios publicados.",
+                        onReintentar = viewModel::reintentarCargaAnuncios
+                    )
+                } else {
+                    HomeScreen(
+                        announcements = anuncios,
+                        onAnnouncementClick = { navController.navigate(Routes.detalle(it.id)) },
+                        onSaveClick = viewModel::alternarGuardado,
+                        onSeeAllClick = { pantallaPendiente("Ver todo") }
+                    )
+                }
             }
             composable(Routes.GUARDADOS) {
                 GuardadosScreen(
@@ -229,17 +237,22 @@ fun FerApp(viewModel: AppViewModel) {
                 val id = entrada.arguments?.getString(Routes.ARG_ID).orEmpty()
                 val anuncio = anuncios.firstOrNull { it.id == id }
 
-                // Pide el detalle al abrir (con backend aquí se haría la llamada).
-                LaunchedEffect(id, anuncio != null) {
-                    anuncio?.let(viewModel::cargarNoticia)
-                }
+                // Al abrir el detalle, su notificación deja de aparecer como nueva.
+                LaunchedEffect(id) { viewModel.marcarLeida(id) }
 
                 if (anuncio != null) {
                     NewsDetailScreen(
                         announcement = anuncio,
                         onBack = { navController.popBackStack() },
-                        onLikeClick = { viewModel.alternarLikeNoticia(id) },
-                        onSaveClick = { viewModel.alternarGuardarCalendarioNoticia(id) }
+                        onLikeClick = { viewModel.alternarLike(id) },
+                        onSaveClick = { viewModel.alternarGuardarCalendario(id) }
+                    )
+                } else {
+                    // El anuncio se despublicó o ya no corresponde a la audiencia del usuario.
+                    EstadoCargaView(
+                        estado = estadoAnuncios,
+                        textoVacio = "Este anuncio ya no está disponible.",
+                        onReintentar = viewModel::reintentarCargaAnuncios
                     )
                 }
             }
@@ -263,6 +276,14 @@ fun FerApp(viewModel: AppViewModel) {
                     onBackClick = { navController.popBackStack() }
                 )
             }
+            composable(Routes.NOTIFICACIONES) {
+                NotificationScreen(
+                    anuncios = anuncios,
+                    leidas = leidas,
+                    onAnnouncementClick = { navController.navigate(Routes.detalle(it.id)) },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
             composable(Routes.BUSQUEDA) {
                 BuscarScreen(
                     anuncios = anuncios,
@@ -275,16 +296,6 @@ fun FerApp(viewModel: AppViewModel) {
             }
         }
     }
-}
-
-/** Abre el menú de compartir de Android con el título y un extracto de la noticia. */
-private fun compartir(context: Context, noticia: Noticia) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, noticia.titulo)
-        putExtra(Intent.EXTRA_TEXT, "${noticia.titulo}\n\n${noticia.descripcion.take(200)}…")
-    }
-    context.startActivity(Intent.createChooser(intent, null))
 }
 
 /** Navegación entre pestañas de la barra inferior (conserva el estado de cada una). */

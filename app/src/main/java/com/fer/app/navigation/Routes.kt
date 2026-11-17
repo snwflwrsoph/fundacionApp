@@ -25,6 +25,7 @@ object Routes {
 
     // Pantalla de búsqueda y subtramas de configuración
     const val BUSQUEDA = "busqueda"
+    const val NOTIFICACIONES = "notificaciones"
     const val TAMANO_TEXTO = "tamano_texto"
 
     /** Rutas donde se muestra la barra superior (logo, buscar, notificaciones). */

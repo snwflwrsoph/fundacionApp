@@ -93,33 +93,3 @@ class AjustesRepositoryPrefs(context: Context) : AjustesRepository {
         }
     }
 }
-
-class AnnouncementRepositoryPrefs(
-    context: Context,
-    inicial: List<Announcement> = FakeAnnouncements.many
-) : AnnouncementRepository {
-    private val prefs = context.getSharedPreferences("fer_anuncios_prefs", Context.MODE_PRIVATE)
-
-    private val _anuncios = MutableStateFlow(loadAnuncios(inicial))
-    override val anuncios: StateFlow<List<Announcement>> = _anuncios.asStateFlow()
-
-    private fun loadAnuncios(listaBase: List<Announcement>): List<Announcement> {
-        val savedIds = prefs.getStringSet("saved_announcement_ids", emptySet()) ?: emptySet()
-        return listaBase.map { anuncio ->
-            if (anuncio.id in savedIds) {
-                anuncio.copy(isSaved = true)
-            } else {
-                anuncio
-            }
-        }
-    }
-
-    override suspend fun alternarGuardado(id: String) {
-        _anuncios.update { lista ->
-            val nuevaLista = lista.map { if (it.id == id) it.copy(isSaved = !it.isSaved) else it }
-            val savedIds = nuevaLista.filter { it.isSaved }.map { it.id }.toSet()
-            prefs.edit().putStringSet("saved_announcement_ids", savedIds).apply()
-            nuevaLista
-        }
-    }
-}

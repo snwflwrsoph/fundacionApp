@@ -64,7 +64,8 @@ fun BuscarScreen(
             anuncios.filter { anuncio ->
                 anuncio.title.lowercase().contains(q) ||
                         anuncio.summary.lowercase().contains(q) ||
-                        anuncio.category.label.lowercase().contains(q)
+                        anuncio.etiqueta.lowercase().contains(q) ||
+                        anuncio.tags.any { it.lowercase().contains(q) }
             }
         }
     }
