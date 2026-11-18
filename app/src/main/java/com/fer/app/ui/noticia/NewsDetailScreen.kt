@@ -77,8 +77,8 @@ fun NewsDetailScreen(
             FilledTonalIconButton(
                 onClick = onBack,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = FerBotones,
-                    contentColor = FerNavy
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
                 ) {
                 Icon(
@@ -104,7 +104,7 @@ fun NewsDetailScreen(
         Text(
             text = announcement.title,
             style = MaterialTheme.typography.headlineSmall,
-            color = FerNavy,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = GoogleSansFlex,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -132,7 +132,7 @@ fun NewsDetailScreen(
                 Text(
                     text = announcement.author,
                     style = MaterialTheme.typography.labelSmall,
-                    color = FerGrisAzulado,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontFamily = GoogleSansFlex,
                     fontWeight = FontWeight.Normal,
                     modifier = Modifier.padding(8.dp)
@@ -141,7 +141,7 @@ fun NewsDetailScreen(
             Text(
                 text = announcement.date,
                 style = MaterialTheme.typography.labelSmall,
-                color = FerGrisAzulado,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = GoogleSansFlex,
                 fontWeight = FontWeight.Normal
             )
@@ -151,7 +151,7 @@ fun NewsDetailScreen(
         Text(
             text = announcement.description,
             style = MaterialTheme.typography.bodyMedium,
-            color = FerNavy,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = GoogleSansFlex,
             fontWeight = FontWeight.Normal,
             modifier = Modifier.padding(24.dp)
@@ -206,7 +206,7 @@ fun NewsDetailScreen(
                 Icon(
                     imageVector = if (announcement.isLikedByUser) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Me gusta",
-                    tint = FerNavy,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -214,7 +214,7 @@ fun NewsDetailScreen(
             Text(
                 text = announcement.likes.toString(),
                 style = MaterialTheme.typography.labelLarge,
-                color = FerNavy
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (announcement.category == AnnouncementCategory.EVENTS &&
                 announcement.eventStartMillis != null
@@ -230,13 +230,13 @@ fun NewsDetailScreen(
                     Icon(
                         imageVector = Icons.Outlined.CalendarToday,
                         contentDescription = null, // el texto de al lado ya lo describe
-                        tint = FerNavy,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
                         text = "Agregar a calendario",
                         style = MaterialTheme.typography.labelLarge,
-                        color = FerNavy
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
