@@ -44,9 +44,19 @@ import android.content.Intent
 import android.provider.Settings
 import com.fer.app.ui.configuracion.rememberLectorPantallaActivo
 import com.fer.app.ui.noticia.agregarAlCalendario
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 @Composable
-fun FerApp(viewModel: AppViewModel) {
+fun FerApp(
+    viewModel: AppViewModel,
+    anuncioIdPendiente: String? = null,
+    onAnuncioPendienteConsumido: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -57,6 +67,25 @@ fun FerApp(viewModel: AppViewModel) {
     val estadoAnuncios by viewModel.estadoAnuncios.collectAsState()
     val leidas by viewModel.notificacionesLeidas.collectAsState()
     val lectorPantallaActivo = rememberLectorPantallaActivo()
+
+    val lanzadorPermisoNotificaciones =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    fun pedirPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            lanzadorPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // Si la app se abrió desde una notificación, va directo a ese anuncio.
+    LaunchedEffect(anuncioIdPendiente) {
+        val id = anuncioIdPendiente ?: return@LaunchedEffect
+        if (perfil.onboardingCompleto) navController.navigate(Routes.detalle(id))
+        onAnuncioPendienteConsumido()
+    }
 
     val rutaActual = navController.currentBackStackEntryAsState().value?.destination?.route
     val mostrarBarraSuperior = rutaActual in Routes.CON_BARRA_SUPERIOR
@@ -78,6 +107,7 @@ fun FerApp(viewModel: AppViewModel) {
 
     fun finalizarFlujo() {
         viewModel.completarOnboarding()
+        pedirPermisoNotificaciones()
 
         navController.navigate(Routes.INICIO) {
             popUpTo(Routes.BIENVENIDA) {
@@ -246,7 +276,10 @@ fun FerApp(viewModel: AppViewModel) {
             composable(Routes.CONFIGURACION) {
                 ConfiguracionScreen(
                     ajustes = ajustes,
-                    onNotificacionesChange = viewModel::cambiarNotificaciones,
+                    onNotificacionesChange = { activo ->
+                        viewModel.cambiarNotificaciones(activo)
+                        if (activo) pedirPermisoNotificaciones()
+                    },
                     onModoOscuroChange = viewModel::cambiarModoOscuro,
                     lectorPantallaActivo = lectorPantallaActivo,
                     onLectorPantallaClick = {

@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class AppViewModel(
     application: Application,
@@ -67,6 +69,13 @@ class AppViewModel(
 
     init {
         viewModelScope.launch { _catalogo.value = catalogoRepository.cargarCatalogo() }
+        viewModelScope.launch {
+            combine(perfilRepository.perfil, ajustesRepository.ajustes) { perfil, ajustes ->
+                perfil.tipoUsuario.takeIf { ajustes.notificaciones }
+            }
+                .distinctUntilChanged()
+                .collect { sincronizarTemas(it) }
+        }
     }
 
     // Flujo de preferencias
@@ -133,6 +142,18 @@ class AppViewModel(
         viewModelScope.launch { ajustesRepository.guardar(transformar(ajustesRepository.ajustes.value)) }
     }
 
+    /** Se suscribe al tema de [tipo] y se da de baja de los demás (null = de todos). */
+    private fun sincronizarTemas(tipo: TipoUsuario?) {
+        val mensajeria = FirebaseMessaging.getInstance()
+        TipoUsuario.entries.forEach { t ->
+            val tarea = if (t == tipo) mensajeria.subscribeToTopic(temaDe(t))
+            else mensajeria.unsubscribeFromTopic(temaDe(t))
+            tarea.addOnCompleteListener {
+                Log.d("FER", "Tema ${temaDe(t)} (${if (t == tipo) "suscrito" else "baja"}): ${it.isSuccessful}")
+            }
+        }
+    }
+
     override fun onCleared() {
         (announcementRepository as? AutoCloseable)?.close()
         super.onCleared()
@@ -142,6 +163,11 @@ class AppViewModel(
         private fun audienciaDe(tipo: TipoUsuario) = when (tipo) {
             TipoUsuario.BECARIO -> "becario"
             TipoUsuario.ASPIRANTE -> "aspirante"
+        }
+        // Para FCM
+        private fun temaDe(tipo: TipoUsuario) = when (tipo) {
+            TipoUsuario.BECARIO -> "becarios"
+            TipoUsuario.ASPIRANTE -> "aspirantes"
         }
 
         private fun esParaAudiencia(anuncio: Announcement, tipo: TipoUsuario?): Boolean {
