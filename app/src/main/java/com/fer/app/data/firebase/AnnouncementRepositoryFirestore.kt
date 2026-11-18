@@ -28,7 +28,6 @@ class AnnouncementRepositoryFirestore(
     private val remotos = MutableStateFlow<List<Announcement>>(emptyList())
     private val guardados = MutableStateFlow(leerConjunto(CLAVE_GUARDADOS))
     private val conLike = MutableStateFlow(leerConjunto(CLAVE_LIKES))
-    private val enCalendario = MutableStateFlow(leerConjunto(CLAVE_CALENDARIO))
 
     private val _anuncios = MutableStateFlow<List<Announcement>>(emptyList())
     override val anuncios: StateFlow<List<Announcement>> = _anuncios.asStateFlow()
@@ -116,9 +115,6 @@ class AnnouncementRepositoryFirestore(
     override suspend fun alternarGuardado(id: String) =
         actualizarConjunto(guardados, CLAVE_GUARDADOS, id, id !in guardados.value)
 
-    override suspend fun alternarGuardarCalendario(id: String) =
-        actualizarConjunto(enCalendario, CLAVE_CALENDARIO, id, id !in enCalendario.value)
-
     override suspend fun marcarLeida(id: String) {
         if (id in _leidas.value) return
         val nuevas = _leidas.value + id
@@ -143,12 +139,10 @@ class AnnouncementRepositoryFirestore(
     private fun publicar() {
         val guardadosAhora = guardados.value
         val likesAhora = conLike.value
-        val calendarioAhora = enCalendario.value
         _anuncios.value = remotos.value.map {
             it.copy(
                 isSaved = it.id in guardadosAhora,
-                isLikedByUser = it.id in likesAhora,
-                isSavedOnCalendar = it.id in calendarioAhora,
+                isLikedByUser = it.id in likesAhora
             )
         }
     }
@@ -173,7 +167,6 @@ class AnnouncementRepositoryFirestore(
         const val COLECCION = "anuncios"
         const val CLAVE_GUARDADOS = "saved_announcement_ids"
         const val CLAVE_LIKES = "liked_announcement_ids"
-        const val CLAVE_CALENDARIO = "calendar_announcement_ids"
         const val CLAVE_LEIDAS = "read_announcement_ids"
     }
 }

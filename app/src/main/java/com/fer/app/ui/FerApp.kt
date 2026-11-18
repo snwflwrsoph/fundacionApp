@@ -43,6 +43,7 @@ import com.fer.app.ui.notifications.NotificationScreen
 import android.content.Intent
 import android.provider.Settings
 import com.fer.app.ui.configuracion.rememberLectorPantallaActivo
+import com.fer.app.ui.noticia.agregarAlCalendario
 
 @Composable
 fun FerApp(viewModel: AppViewModel) {
@@ -231,7 +232,7 @@ fun FerApp(viewModel: AppViewModel) {
                         announcement = anuncio,
                         onBack = { navController.popBackStack() },
                         onLikeClick = { viewModel.alternarLike(id) },
-                        onSaveClick = { viewModel.alternarGuardarCalendario(id) }
+                        onAddToCalendarClick = { context.agregarAlCalendario(anuncio) }
                     )
                 } else {
                     // El anuncio se despublicó o ya no corresponde a la audiencia del usuario.

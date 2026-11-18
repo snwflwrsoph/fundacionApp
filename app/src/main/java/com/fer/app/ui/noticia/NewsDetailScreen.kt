@@ -1,6 +1,7 @@
 package com.fer.app.ui.noticia
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +58,7 @@ fun NewsDetailScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onLikeClick: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
+    onAddToCalendarClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -215,24 +216,29 @@ fun NewsDetailScreen(
                 style = MaterialTheme.typography.labelLarge,
                 color = FerNavy
             )
-            if(announcement.category == AnnouncementCategory.EVENTS) {
-                IconToggleButton(
-                    checked = announcement.isSavedOnCalendar,
-                    onCheckedChange = { onSaveClick() }
+            if (announcement.category == AnnouncementCategory.EVENTS &&
+                announcement.eventStartMillis != null
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp))
+                        .clickable(role = Role.Button, onClick = onAddToCalendarClick)
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = if (announcement.isSavedOnCalendar) Icons.Filled.CalendarToday else Icons.Outlined.CalendarToday,
-                        contentDescription = "Agregar a calendario",
+                        imageVector = Icons.Outlined.CalendarToday,
+                        contentDescription = null, // el texto de al lado ya lo describe
                         tint = FerNavy,
                         modifier = Modifier.size(18.dp)
                     )
+                    Text(
+                        text = "Agregar a calendario",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = FerNavy
+                    )
                 }
-
-                Text(
-                    text = "Agregar a calendario",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = FerNavy
-                )
             }
 
         }

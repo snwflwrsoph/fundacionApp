@@ -61,7 +61,9 @@ internal fun DocumentSnapshot.aAnnouncement(ahoraMillis: Long): Announcement? {
         isFeatured = booleano("isFeatured") ?: false,
         likes = entero("likes") ?: 0,
         isLikedByUser = false,        // lo aplica el repositorio
-        isSavedOnCalendar = false,    // lo aplica el repositorio
+        eventStartMillis = marca("fechaEvento")?.toDate()?.time,
+        eventEndMillis = marca("fechaFin")?.toDate()?.time,
+        location = texto("lugar")?.takeIf { it.isNotBlank() },
     )
 }
 

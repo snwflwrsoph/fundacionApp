@@ -111,10 +111,6 @@ class AppViewModel(
         viewModelScope.launch { announcementRepository.alternarLike(id) }
     }
 
-    fun alternarGuardarCalendario(id: String) {
-        viewModelScope.launch { announcementRepository.alternarGuardarCalendario(id) }
-    }
-
     /** Se llama al abrir un anuncio: su notificación deja de aparecer como nueva. */
     fun marcarLeida(id: String) {
         viewModelScope.launch { announcementRepository.marcarLeida(id) }
@@ -143,16 +139,11 @@ class AppViewModel(
     }
 
     companion object {
-        /** Lo que dice "becarios" / "aspirantes" en el campo `audiencias` de Firestore. */
         private fun audienciaDe(tipo: TipoUsuario) = when (tipo) {
             TipoUsuario.BECARIO -> "becario"
             TipoUsuario.ASPIRANTE -> "aspirante"
         }
 
-        /**
-         * Se muestra si no tiene audiencias, si incluye "todos"/"general", o si incluye la del usuario.
-         * Si el usuario aún no elige tipo, ve todo. Ignora mayúsculas, acentos y la "s" final.
-         */
         private fun esParaAudiencia(anuncio: Announcement, tipo: TipoUsuario?): Boolean {
             if (tipo == null || anuncio.audiences.isEmpty()) return true
             val buscada = audienciaDe(tipo)

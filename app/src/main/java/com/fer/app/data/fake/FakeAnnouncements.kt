@@ -39,7 +39,6 @@ object FakeAnnouncements {
             isFeatured = true,
             likes = 42,
             isLikedByUser = false,
-            isSavedOnCalendar = false,
         ),
         Announcement(
             id = "2",
@@ -67,7 +66,6 @@ object FakeAnnouncements {
             isFeatured = true,
             likes = 35,
             isLikedByUser = false,
-            isSavedOnCalendar = false,
         ),
 
         Announcement(
@@ -96,7 +94,6 @@ object FakeAnnouncements {
             isFeatured = true,
             likes = 67,
             isLikedByUser = false,
-            isSavedOnCalendar = false,
         ),
         Announcement(
             id = "4",
@@ -122,7 +119,7 @@ object FakeAnnouncements {
             isFeatured = true,
             likes = 42,
             isLikedByUser = false,
-            isSavedOnCalendar = false,
+
         ),
     )
     val many: List<Announcement> = List(30) { i ->

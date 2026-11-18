@@ -26,9 +26,6 @@ class AnnouncementRepositoryFake(
         it.copy(isLikedByUser = ahoraLeGusta, likes = it.likes + if (ahoraLeGusta) 1 else -1)
     }
 
-    override suspend fun alternarGuardarCalendario(id: String) =
-        modificar(id) { it.copy(isSavedOnCalendar = !it.isSavedOnCalendar) }
-
     override suspend fun marcarLeida(id: String) {
         _leidas.update { it + id }
     }

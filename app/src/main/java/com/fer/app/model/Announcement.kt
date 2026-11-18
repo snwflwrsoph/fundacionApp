@@ -36,7 +36,9 @@ data class Announcement(
     val isFeatured: Boolean = false,
     val likes: Int,
     val isLikedByUser: Boolean,
-    val isSavedOnCalendar: Boolean,
+    val eventStartMillis: Long? = null,
+    val eventEndMillis: Long? = null,
+    val location: String? = null,
 ) {
     val etiqueta: String
         get() = if (category == AnnouncementCategory.GENERAL) {

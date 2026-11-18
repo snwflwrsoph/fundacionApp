@@ -24,7 +24,6 @@ interface AnnouncementRepository {
 
     suspend fun alternarGuardado(id: String)
     suspend fun alternarLike(id: String)
-    suspend fun alternarGuardarCalendario(id: String)
     suspend fun marcarLeida(id: String)
     suspend fun reintentar()
 }
