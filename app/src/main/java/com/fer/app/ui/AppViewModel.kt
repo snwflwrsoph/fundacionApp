@@ -1,7 +1,11 @@
 package com.fer.app.ui
 
 import android.app.Application
+import android.content.Context
+import android.os.Build
 import android.util.Log
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -131,6 +135,34 @@ class AppViewModel(
     fun cambiarModoOscuro(valor: Boolean) = actualizarAjustes { it.copy(modoOscuro = valor) }
     fun cambiarCompartirDatos(valor: Boolean) = actualizarAjustes { it.copy(compartirDatos = valor) }
     fun cambiarTamanoTexto(tamano: TamanoTexto) = actualizarAjustes { it.copy(tamanoTexto = tamano) }
+
+    fun enviarReporteProblema(categoria: String, descripcion: String, contacto: String) {
+        val ahora = System.currentTimeMillis()
+        val prefs = getApplication<Application>().getSharedPreferences("fer_reportes_prefs", Context.MODE_PRIVATE)
+        val guardados = prefs.getStringSet("reportes_locales", emptySet())?.toMutableSet() ?: mutableSetOf()
+        guardados.add("$ahora|$categoria|$contacto|$descripcion")
+        prefs.edit().putStringSet("reportes_locales", guardados).apply()
+
+        val reporte = hashMapOf(
+            "categoria" to categoria,
+            "descripcion" to descripcion,
+            "contacto" to contacto,
+            "tipoUsuario" to (perfil.value.tipoUsuario?.name ?: "SIN_DEFINIR"),
+            "dispositivo" to "${Build.MANUFACTURER} ${Build.MODEL}",
+            "fecha" to FieldValue.serverTimestamp(),
+            "timestampMillis" to ahora
+        )
+        runCatching {
+            FirebaseFirestore.getInstance().collection("reportes")
+                .add(reporte)
+                .addOnSuccessListener {
+                    Log.d("FER", "Reporte enviado a Firestore: ${it.id}")
+                }
+                .addOnFailureListener { error ->
+                    Log.w("FER", "No se pudo sincronizar el reporte en Firestore; guardado localmente", error)
+                }
+        }
+    }
 
     // Internos
 

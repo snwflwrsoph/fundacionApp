@@ -52,6 +52,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.net.Uri
 import com.fer.app.ui.configuracion.PermisosScreen
+import com.fer.app.ui.configuracion.ReportarProblemaScreen
 import com.fer.app.ui.configuracion.rememberNotificacionesPermitidas
 
 @Composable
@@ -303,9 +304,8 @@ fun FerApp(
                     },
                     onCompartirDatosChange = viewModel::cambiarCompartirDatos,
                     onTamanoTextoClick = { navController.navigate(Routes.TAMANO_TEXTO) },
-                    // Estas dos no tienen pantalla diseñada todavía.
                     onPermisosClick = { navController.navigate(Routes.PERMISOS) },
-                    onReportarProblemaClick = { pantallaPendiente() }
+                    onReportarProblemaClick = { navController.navigate(Routes.REPORTAR_PROBLEMA) }
                 )
             }
             composable(Routes.TAMANO_TEXTO) {
@@ -319,6 +319,20 @@ fun FerApp(
                 PermisosScreen(
                     notificacionesPermitidas = rememberNotificacionesPermitidas(),
                     onAbrirAjustesClick = ::abrirAjustesDeNotificaciones,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.REPORTAR_PROBLEMA) {
+                ReportarProblemaScreen(
+                    onEnviarReporte = { categoria, descripcion, contacto ->
+                        viewModel.enviarReporteProblema(categoria, descripcion, contacto)
+                        Toast.makeText(
+                            context,
+                            "Reporte enviado. ¡Gracias por tu ayuda!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        navController.popBackStack()
+                    },
                     onBackClick = { navController.popBackStack() }
                 )
             }

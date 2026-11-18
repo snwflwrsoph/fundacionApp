@@ -28,6 +28,9 @@ class AnnouncementRepositoryFirestore(
     private val remotos = MutableStateFlow<List<Announcement>>(emptyList())
     private val guardados = MutableStateFlow(leerConjunto(CLAVE_GUARDADOS))
     private val conLike = MutableStateFlow(leerConjunto(CLAVE_LIKES))
+    private val likesSincronizados = MutableStateFlow(leerConjunto(CLAVE_LIKES_SINCRONIZADOS))
+    private val likesEnVuelo = mutableSetOf<String>()
+    private val likesBaseServidor = mutableMapOf<String, Int>()
 
     private val _anuncios = MutableStateFlow<List<Announcement>>(emptyList())
     override val anuncios: StateFlow<List<Announcement>> = _anuncios.asStateFlow()
@@ -103,12 +106,26 @@ class AnnouncementRepositoryFirestore(
 
     override suspend fun alternarLike(id: String) {
         val yaLeGustaba = id in conLike.value
-        actualizarConjunto(conLike, CLAVE_LIKES, id, !yaLeGustaba)
+        val leGustaAhora = !yaLeGustaba
+        actualizarConjunto(conLike, CLAVE_LIKES, id, leGustaAhora)
+
+        val sincronizadoEnServidor = id in likesSincronizados.value
+        if (leGustaAhora == sincronizadoEnServidor) return
+
+        val delta = if (leGustaAhora) 1L else -1L
+        likesEnVuelo.add(id)
         firestore.collection(COLECCION).document(id)
-            .update("likes", FieldValue.increment(if (yaLeGustaba) -1L else 1L))
+            .update("likes", FieldValue.increment(delta))
+            .addOnSuccessListener {
+                likesEnVuelo.remove(id)
+                likesBaseServidor[id] = ((likesBaseServidor[id] ?: 0) + delta.toInt()).coerceAtLeast(0)
+                actualizarConjunto(likesSincronizados, CLAVE_LIKES_SINCRONIZADOS, id, leGustaAhora)
+                reconstruir()
+            }
             .addOnFailureListener { error ->
-                Log.w(TAG, "No se pudo actualizar el like de $id", error)
-                actualizarConjunto(conLike, CLAVE_LIKES, id, yaLeGustaba) // deshace el cambio local
+                likesEnVuelo.remove(id)
+                Log.w(TAG, "No se pudo sincronizar el like de $id en Firestore; se conserva localmente", error)
+                reconstruir()
             }
     }
 
@@ -124,11 +141,34 @@ class AnnouncementRepositoryFirestore(
 
     // ---------- Internos ----------
 
+    private fun deltaLikeLocal(id: String): Int {
+        val leGusta = id in conLike.value
+        val sincronizado = id in likesSincronizados.value
+        return (if (leGusta) 1 else 0) - (if (sincronizado) 1 else 0)
+    }
+
     private fun reconstruir() {
         val ahora = System.currentTimeMillis()
         remotos.value = documentos
             .mapNotNull { doc ->
-                runCatching { doc.aAnnouncement(ahora) }
+                runCatching {
+                    val anuncio = doc.aAnnouncement(ahora) ?: return@runCatching null
+                    val tieneEscrituraPendiente = doc.id in likesEnVuelo || doc.metadata.hasPendingWrites()
+                    val likesServidor = if (!tieneEscrituraPendiente) {
+                        if (anuncio.likes == 0 && doc.id in likesSincronizados.value) {
+                            val actualizados = likesSincronizados.value - doc.id
+                            likesSincronizados.value = actualizados
+                            prefs.edit().putStringSet(CLAVE_LIKES_SINCRONIZADOS, actualizados).apply()
+                        }
+                        likesBaseServidor[doc.id] = anuncio.likes
+                        anuncio.likes
+                    } else {
+                        likesBaseServidor.getOrPut(doc.id) {
+                            (anuncio.likes - deltaLikeLocal(doc.id)).coerceAtLeast(0)
+                        }
+                    }
+                    anuncio.copy(likes = likesServidor)
+                }
                     .onFailure { Log.e(TAG, "[${doc.id}] no se pudo leer el documento", it) }
                     .getOrNull()
             }
@@ -140,9 +180,12 @@ class AnnouncementRepositoryFirestore(
         val guardadosAhora = guardados.value
         val likesAhora = conLike.value
         _anuncios.value = remotos.value.map {
+            val leGusta = it.id in likesAhora
+            val likesCalculados = (it.likes + deltaLikeLocal(it.id)).coerceAtLeast(if (leGusta) 1 else 0)
             it.copy(
                 isSaved = it.id in guardadosAhora,
-                isLikedByUser = it.id in likesAhora
+                isLikedByUser = leGusta,
+                likes = likesCalculados
             )
         }
     }
@@ -167,6 +210,7 @@ class AnnouncementRepositoryFirestore(
         const val COLECCION = "anuncios"
         const val CLAVE_GUARDADOS = "saved_announcement_ids"
         const val CLAVE_LIKES = "liked_announcement_ids"
+        const val CLAVE_LIKES_SINCRONIZADOS = "synced_liked_announcement_ids"
         const val CLAVE_LEIDAS = "read_announcement_ids"
     }
 }
