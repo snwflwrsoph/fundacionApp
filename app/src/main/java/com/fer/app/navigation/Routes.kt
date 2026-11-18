@@ -27,6 +27,7 @@ object Routes {
     const val BUSQUEDA = "busqueda"
     const val NOTIFICACIONES = "notificaciones"
     const val TAMANO_TEXTO = "tamano_texto"
+    const val PERMISOS = "permisos"
 
     /** Rutas donde se muestra la barra superior (logo, buscar, notificaciones). */
     val CON_BARRA_SUPERIOR = setOf(INICIO, GUARDADOS)

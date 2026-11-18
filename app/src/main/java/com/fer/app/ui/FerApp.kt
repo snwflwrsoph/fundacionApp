@@ -50,6 +50,9 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import android.net.Uri
+import com.fer.app.ui.configuracion.PermisosScreen
+import com.fer.app.ui.configuracion.rememberNotificacionesPermitidas
 
 @Composable
 fun FerApp(
@@ -78,6 +81,19 @@ fun FerApp(
         ) {
             lanzadorPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    fun abrirAjustesDeNotificaciones() {
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        } else {
+            Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", context.packageName, null)
+            )
+        }
+        runCatching { context.startActivity(intent) }
     }
 
     // Si la app se abrió desde una notificación, va directo a ese anuncio.
@@ -288,7 +304,7 @@ fun FerApp(
                     onCompartirDatosChange = viewModel::cambiarCompartirDatos,
                     onTamanoTextoClick = { navController.navigate(Routes.TAMANO_TEXTO) },
                     // Estas dos no tienen pantalla diseñada todavía.
-                    onPermisosClick = { pantallaPendiente() },
+                    onPermisosClick = { navController.navigate(Routes.PERMISOS) },
                     onReportarProblemaClick = { pantallaPendiente() }
                 )
             }
@@ -296,6 +312,13 @@ fun FerApp(
                 TamanoTextoScreen(
                     seleccion = ajustes.tamanoTexto,
                     onSeleccionChange = viewModel::cambiarTamanoTexto,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.PERMISOS) {
+                PermisosScreen(
+                    notificacionesPermitidas = rememberNotificacionesPermitidas(),
+                    onAbrirAjustesClick = ::abrirAjustesDeNotificaciones,
                     onBackClick = { navController.popBackStack() }
                 )
             }
