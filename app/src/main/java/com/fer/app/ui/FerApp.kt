@@ -46,11 +46,16 @@ import com.fer.app.ui.configuracion.rememberLectorPantallaActivo
 import com.fer.app.ui.noticia.agregarAlCalendario
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import android.net.Uri
+import com.fer.app.MainActivity
 import com.fer.app.ui.configuracion.PermisosScreen
 import com.fer.app.ui.configuracion.ReportarProblemaScreen
 import com.fer.app.ui.configuracion.rememberNotificacionesPermitidas
@@ -68,21 +73,12 @@ fun FerApp(
     val ajustes by viewModel.ajustes.collectAsState()
     val catalogo by viewModel.catalogo.collectAsState()
     val anuncios by viewModel.anuncios.collectAsState()
+    val todosLosAnuncios by viewModel.todosLosAnuncios.collectAsState()
     val estadoAnuncios by viewModel.estadoAnuncios.collectAsState()
     val leidas by viewModel.notificacionesLeidas.collectAsState()
     val lectorPantallaActivo = rememberLectorPantallaActivo()
-
-    val lanzadorPermisoNotificaciones =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-
-    fun pedirPermisoNotificaciones() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            lanzadorPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
-    }
+    val notificacionesPermitidas = rememberNotificacionesPermitidas()
+    var esperandoActivarNotificaciones by rememberSaveable { mutableStateOf(false) }
 
     fun abrirAjustesDeNotificaciones() {
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -97,10 +93,73 @@ fun FerApp(
         runCatching { context.startActivity(intent) }
     }
 
-    // Si la app se abrió desde una notificación, va directo a ese anuncio.
-    LaunchedEffect(anuncioIdPendiente) {
-        val id = anuncioIdPendiente ?: return@LaunchedEffect
-        if (perfil.onboardingCompleto) navController.navigate(Routes.detalle(id))
+    val lanzadorPermisoNotificaciones =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
+            if (concedido) {
+                esperandoActivarNotificaciones = false
+                viewModel.cambiarNotificaciones(true)
+            } else if (esperandoActivarNotificaciones) {
+                viewModel.cambiarNotificaciones(false)
+                val actividad = context as? Activity
+                val puedeMostrarDialogo = actividad != null &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                        actividad,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                if (!puedeMostrarDialogo) {
+                    Toast.makeText(
+                        context,
+                        "Activa las notificaciones en los ajustes del sistema",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    abrirAjustesDeNotificaciones()
+                } else {
+                    esperandoActivarNotificaciones = false
+                }
+            }
+        }
+
+    LaunchedEffect(notificacionesPermitidas, esperandoActivarNotificaciones) {
+        if (esperandoActivarNotificaciones && notificacionesPermitidas) {
+            esperandoActivarNotificaciones = false
+            viewModel.cambiarNotificaciones(true)
+        }
+    }
+
+    fun pedirPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            lanzadorPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // Si la app se abrió desde una notificación push o deep link, navega directo al anuncio.
+    LaunchedEffect(anuncioIdPendiente, perfil.onboardingCompleto, anuncios, todosLosAnuncios) {
+        val destino = anuncioIdPendiente ?: return@LaunchedEffect
+        if (!perfil.onboardingCompleto) return@LaunchedEffect
+
+        val idResuelto = when {
+            destino == MainActivity.DESTINO_RECIENTE -> {
+                val candidato = anuncios.firstOrNull() ?: todosLosAnuncios.firstOrNull()
+                candidato?.id ?: return@LaunchedEffect
+            }
+            destino.startsWith(MainActivity.PREFIJO_TITULO) -> {
+                if (todosLosAnuncios.isEmpty()) return@LaunchedEffect
+                val tituloBuscado = destino.removePrefix(MainActivity.PREFIJO_TITULO)
+                val coincidencia = todosLosAnuncios.firstOrNull {
+                    it.title.equals(tituloBuscado, ignoreCase = true)
+                } ?: anuncios.firstOrNull() ?: todosLosAnuncios.firstOrNull()
+                coincidencia?.id ?: return@LaunchedEffect
+            }
+            else -> destino
+        }
+
+        navController.navigate(Routes.detalle(idResuelto)) {
+            launchSingleTop = true
+        }
         onAnuncioPendienteConsumido()
     }
 
@@ -270,6 +329,7 @@ fun FerApp(
             ) { entrada ->
                 val id = entrada.arguments?.getString(Routes.ARG_ID).orEmpty()
                 val anuncio = anuncios.firstOrNull { it.id == id }
+                    ?: todosLosAnuncios.firstOrNull { it.id == id }
 
                 // Al abrir el detalle, su notificación deja de aparecer como nueva.
                 LaunchedEffect(id) { viewModel.marcarLeida(id) }
@@ -292,10 +352,34 @@ fun FerApp(
             }
             composable(Routes.CONFIGURACION) {
                 ConfiguracionScreen(
-                    ajustes = ajustes,
+                    ajustes = ajustes.copy(
+                        notificaciones = ajustes.notificaciones && notificacionesPermitidas
+                    ),
                     onNotificacionesChange = { activo ->
-                        viewModel.cambiarNotificaciones(activo)
-                        if (activo) pedirPermisoNotificaciones()
+                        if (!activo) {
+                            esperandoActivarNotificaciones = false
+                            viewModel.cambiarNotificaciones(false)
+                        } else if (NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                            esperandoActivarNotificaciones = false
+                            viewModel.cambiarNotificaciones(true)
+                        } else {
+                            esperandoActivarNotificaciones = true
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) != PackageManager.PERMISSION_GRANTED
+                            ) {
+                                lanzadorPermisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Activa las notificaciones en los ajustes del sistema",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                abrirAjustesDeNotificaciones()
+                            }
+                        }
                     },
                     onModoOscuroChange = viewModel::cambiarModoOscuro,
                     lectorPantallaActivo = lectorPantallaActivo,

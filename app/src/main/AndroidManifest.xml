@@ -25,7 +25,32 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="fer"
+                    android:host="anuncio" />
+                <data
+                    android:scheme="fer"
+                    android:host="detalle" />
+            </intent-filter>
         </activity>
+
+        <service
+            android:name=".notifications.FerMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="fer_anuncios" />
     </application>
 
 </manifest>

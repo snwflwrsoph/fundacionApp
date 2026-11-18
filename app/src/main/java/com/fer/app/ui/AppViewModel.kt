@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.lifecycle.AndroidViewModel
@@ -66,6 +67,7 @@ class AppViewModel(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val estadoAnuncios: StateFlow<EstadoCarga> = announcementRepository.estado
+    val todosLosAnuncios: StateFlow<List<Announcement>> = announcementRepository.anuncios
     val notificacionesLeidas: StateFlow<Set<String>> = announcementRepository.leidas
 
     private val _catalogo = MutableStateFlow(Catalogo())
@@ -75,10 +77,10 @@ class AppViewModel(
         viewModelScope.launch { _catalogo.value = catalogoRepository.cargarCatalogo() }
         viewModelScope.launch {
             combine(perfilRepository.perfil, ajustesRepository.ajustes) { perfil, ajustes ->
-                perfil.tipoUsuario.takeIf { ajustes.notificaciones }
+                ajustes.notificaciones to perfil.tipoUsuario
             }
                 .distinctUntilChanged()
-                .collect { sincronizarTemas(it) }
+                .collect { (activas, tipo) -> sincronizarTemas(activas, tipo) }
         }
     }
 
@@ -174,14 +176,28 @@ class AppViewModel(
         viewModelScope.launch { ajustesRepository.guardar(transformar(ajustesRepository.ajustes.value)) }
     }
 
-    /** Se suscribe al tema de [tipo] y se da de baja de los demás (null = de todos). */
-    private fun sincronizarTemas(tipo: TipoUsuario?) {
-        val mensajeria = FirebaseMessaging.getInstance()
-        TipoUsuario.entries.forEach { t ->
-            val tarea = if (t == tipo) mensajeria.subscribeToTopic(temaDe(t))
-            else mensajeria.unsubscribeFromTopic(temaDe(t))
-            tarea.addOnCompleteListener {
-                Log.d("FER", "Tema ${temaDe(t)} (${if (t == tipo) "suscrito" else "baja"}): ${it.isSuccessful}")
+    /** Activa/desactiva FCM y sincroniza la suscripción a temas según la preferencia y audiencia. */
+    private fun sincronizarTemas(activas: Boolean, tipo: TipoUsuario?) {
+        runCatching {
+            val mensajeria = FirebaseMessaging.getInstance()
+            mensajeria.isAutoInitEnabled = activas
+            if (!activas) {
+                NotificationManagerCompat.from(getApplication()).cancelAll()
+            }
+            listOf("general", "todos").forEach { temaGeneral ->
+                val tarea = if (activas) mensajeria.subscribeToTopic(temaGeneral)
+                else mensajeria.unsubscribeFromTopic(temaGeneral)
+                tarea.addOnCompleteListener {
+                    Log.d("FER", "Tema $temaGeneral (${if (activas) "suscrito" else "baja"}): ${it.isSuccessful}")
+                }
+            }
+            TipoUsuario.entries.forEach { t ->
+                val suscribir = activas && t == tipo
+                val tarea = if (suscribir) mensajeria.subscribeToTopic(temaDe(t))
+                else mensajeria.unsubscribeFromTopic(temaDe(t))
+                tarea.addOnCompleteListener {
+                    Log.d("FER", "Tema ${temaDe(t)} (${if (suscribir) "suscrito" else "baja"}): ${it.isSuccessful}")
+                }
             }
         }
     }
