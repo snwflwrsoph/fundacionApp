@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
@@ -43,7 +44,7 @@ fun AnnouncementImage(
         )
 
         else -> Box(   // "FOTO" = el campo viene vacío desde Firestore
-            modifier = modifier.background(placeholderColor),
+            modifier = modifier.background(placeholderColor).clearAndSetSemantics { },
             contentAlignment = Alignment.Center,
         ) {
             Text(

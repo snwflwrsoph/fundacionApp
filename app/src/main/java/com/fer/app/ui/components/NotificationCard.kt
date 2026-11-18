@@ -27,6 +27,8 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +53,7 @@ fun NotificationCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
+            .semantics { if (!hasOpened) stateDescription = "Sin leer" }
             .clickable(onClick = onClick)
             .height(48.dp),
         shape = shape,

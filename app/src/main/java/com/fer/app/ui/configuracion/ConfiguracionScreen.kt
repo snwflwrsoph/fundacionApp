@@ -30,6 +30,10 @@ import androidx.compose.ui.unit.sp
 import com.fer.app.R
 import com.fer.app.model.AjustesApp
 import com.fer.app.ui.theme.FerTheme
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 @Composable
 fun ConfiguracionScreen(
@@ -37,7 +41,8 @@ fun ConfiguracionScreen(
     modifier: Modifier = Modifier,
     onNotificacionesChange: (Boolean) -> Unit = {},
     onModoOscuroChange: (Boolean) -> Unit = {},
-    onLectorPantallaChange: (Boolean) -> Unit = {},
+    lectorPantallaActivo: Boolean = false,
+    onLectorPantallaClick: () -> Unit = {},
     onCompartirDatosChange: (Boolean) -> Unit = {},
     onTamanoTextoClick: () -> Unit = {},
     onPermisosClick: () -> Unit = {},
@@ -98,8 +103,8 @@ fun ConfiguracionScreen(
                 ItemSwitch(
                     titulo = stringResource(R.string.lector_pantalla_titulo),
                     subtitulo = stringResource(R.string.lector_pantalla_subtitulo),
-                    checked = ajustes.lectorPantalla,
-                    onCheckedChange = onLectorPantallaChange
+                    checked = lectorPantallaActivo,
+                    onCheckedChange = { onLectorPantallaClick() }
                 )
             }
             item { Divisor() }
@@ -145,7 +150,8 @@ private fun SeccionTitulo(texto: String) {
         text = texto,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 28.dp, end = 28.dp, top = 28.dp, bottom = 12.dp),
+            .padding(start = 28.dp, end = 28.dp, top = 28.dp, bottom = 12.dp)
+            .semantics { heading() },
         fontSize = 24.sp,
         fontWeight = FontWeight.Normal,
         color = MaterialTheme.colorScheme.onBackground
@@ -162,7 +168,7 @@ private fun ItemSwitch(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = 28.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -181,7 +187,7 @@ private fun ItemSwitch(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = null
         )
     }
 }

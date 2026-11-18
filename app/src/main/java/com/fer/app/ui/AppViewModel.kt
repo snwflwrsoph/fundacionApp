@@ -69,7 +69,7 @@ class AppViewModel(
         viewModelScope.launch { _catalogo.value = catalogoRepository.cargarCatalogo() }
     }
 
-    // ---------- Flujo de preferencias ----------
+    // Flujo de preferencias
 
     fun seleccionarTipoUsuario(tipo: TipoUsuario) = actualizarPerfil { it.copy(tipoUsuario = tipo) }
 
@@ -95,7 +95,7 @@ class AppViewModel(
 
     fun completarOnboarding() = actualizarPerfil { it.copy(onboardingCompleto = true) }
 
-    // ---------- Feed ----------
+    // Feed
 
     fun alternarGuardado(anuncio: Announcement) {
         viewModelScope.launch { announcementRepository.alternarGuardado(anuncio.id) }
@@ -105,7 +105,7 @@ class AppViewModel(
         viewModelScope.launch { announcementRepository.reintentar() }
     }
 
-    // ---------- Detalle de anuncio ----------
+    // Detalle de anuncio
 
     fun alternarLike(id: String) {
         viewModelScope.launch { announcementRepository.alternarLike(id) }
@@ -120,15 +120,14 @@ class AppViewModel(
         viewModelScope.launch { announcementRepository.marcarLeida(id) }
     }
 
-    // ---------- Configuración ----------
+    // Configuración
 
     fun cambiarNotificaciones(valor: Boolean) = actualizarAjustes { it.copy(notificaciones = valor) }
     fun cambiarModoOscuro(valor: Boolean) = actualizarAjustes { it.copy(modoOscuro = valor) }
-    fun cambiarLectorPantalla(valor: Boolean) = actualizarAjustes { it.copy(lectorPantalla = valor) }
     fun cambiarCompartirDatos(valor: Boolean) = actualizarAjustes { it.copy(compartirDatos = valor) }
     fun cambiarTamanoTexto(tamano: TamanoTexto) = actualizarAjustes { it.copy(tamanoTexto = tamano) }
 
-    // ---------- Internos ----------
+    // Internos
 
     private fun actualizarPerfil(transformar: (PerfilUsuario) -> PerfilUsuario) {
         viewModelScope.launch { perfilRepository.guardar(transformar(perfilRepository.perfil.value)) }

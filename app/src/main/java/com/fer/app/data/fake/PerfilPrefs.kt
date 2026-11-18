@@ -67,7 +67,6 @@ class AjustesRepositoryPrefs(context: Context) : AjustesRepository {
     private fun loadAjustes(): AjustesApp {
         val notif = prefs.getBoolean("notificaciones", true)
         val oscuro = prefs.getBoolean("modo_oscuro", false)
-        val lector = prefs.getBoolean("lector_pantalla", false)
         val compartir = prefs.getBoolean("compartir_datos", true)
         val tamanoStr = prefs.getString("tamano_texto", TamanoTexto.NORMAL.name)
         val tamano = tamanoStr?.let { runCatching { TamanoTexto.valueOf(it) }.getOrNull() } ?: TamanoTexto.NORMAL
@@ -75,7 +74,6 @@ class AjustesRepositoryPrefs(context: Context) : AjustesRepository {
         return AjustesApp(
             notificaciones = notif,
             modoOscuro = oscuro,
-            lectorPantalla = lector,
             compartirDatos = compartir,
             tamanoTexto = tamano
         )
@@ -86,7 +84,6 @@ class AjustesRepositoryPrefs(context: Context) : AjustesRepository {
         prefs.edit().apply {
             putBoolean("notificaciones", ajustes.notificaciones)
             putBoolean("modo_oscuro", ajustes.modoOscuro)
-            putBoolean("lector_pantalla", ajustes.lectorPantalla)
             putBoolean("compartir_datos", ajustes.compartirDatos)
             putString("tamano_texto", ajustes.tamanoTexto.name)
             apply()

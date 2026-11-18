@@ -2,7 +2,6 @@ package com.fer.app.model
 
 import androidx.annotation.DrawableRes
 
-/** Quién es el usuario (pantalla "Bienvenido" y Configuración > Tipo de usuario). */
 enum class TipoUsuario { BECARIO, ASPIRANTE }
 
 enum class NivelEducativo { PREPARATORIA, UNIVERSIDAD, MAESTRIA }
@@ -49,7 +48,6 @@ data class PerfilUsuario(
 data class AjustesApp(
     val notificaciones: Boolean = true,
     val modoOscuro: Boolean = false,
-    val lectorPantalla: Boolean = false,
     val compartirDatos: Boolean = true,
     val tamanoTexto: TamanoTexto = TamanoTexto.NORMAL
 )

@@ -40,23 +40,10 @@ import com.fer.app.ui.onboarding.PreferenciasScreen
 import com.fer.app.ui.onboarding.SeleccionScreen
 import com.fer.app.ui.components.EstadoCargaView
 import com.fer.app.ui.notifications.NotificationScreen
+import android.content.Intent
+import android.provider.Settings
+import com.fer.app.ui.configuracion.rememberLectorPantallaActivo
 
-/**
- * Raíz de la app: un solo NavHost con todas las pantallas.
- *
- * Mapa de navegación:
- *
- *   Primer arranque / pestaña "Preferencias":
- *     BIENVENIDA (Becario/Aspirante) -> NIVEL_EDUCATIVO
- *        |- Preparatoria o Maestría -> fin del flujo
- *        '- Universidad -> TIPO_UNIVERSIDAD (Pública/Privada) -> UNIVERSIDADES/{tipo} -> fin del flujo
- *
- *   Fin del flujo: primer arranque -> INICIO; si venía de la pestaña -> regresa a donde estaba.
- *
- *   App (barra inferior): INICIO (feed) | GUARDADOS | Preferencias (abre el flujo) | CONFIGURACION
- *     CONFIGURACION -> TIPO_USUARIO
- *     INICIO / GUARDADOS -> (tocar un anuncio) DETALLE/{id}
- */
 @Composable
 fun FerApp(viewModel: AppViewModel) {
     val navController = rememberNavController()
@@ -68,6 +55,7 @@ fun FerApp(viewModel: AppViewModel) {
     val anuncios by viewModel.anuncios.collectAsState()
     val estadoAnuncios by viewModel.estadoAnuncios.collectAsState()
     val leidas by viewModel.notificacionesLeidas.collectAsState()
+    val lectorPantallaActivo = rememberLectorPantallaActivo()
 
     val rutaActual = navController.currentBackStackEntryAsState().value?.destination?.route
     val mostrarBarraSuperior = rutaActual in Routes.CON_BARRA_SUPERIOR
@@ -141,7 +129,6 @@ fun FerApp(viewModel: AppViewModel) {
             startDestination = destinoInicial,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // ---------- Flujo de preferencias ----------
             composable(Routes.BIENVENIDA) {
                 PreferenciasScreen(
                     seleccionInicial = perfil.tipoUsuario,
@@ -206,7 +193,6 @@ fun FerApp(viewModel: AppViewModel) {
                 )
             }
 
-            // ---------- App principal ----------
             composable(Routes.INICIO) {
                 if (anuncios.isEmpty()) {
                     EstadoCargaView(
@@ -261,7 +247,10 @@ fun FerApp(viewModel: AppViewModel) {
                     ajustes = ajustes,
                     onNotificacionesChange = viewModel::cambiarNotificaciones,
                     onModoOscuroChange = viewModel::cambiarModoOscuro,
-                    onLectorPantallaChange = viewModel::cambiarLectorPantalla,
+                    lectorPantallaActivo = lectorPantallaActivo,
+                    onLectorPantallaClick = {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                    },
                     onCompartirDatosChange = viewModel::cambiarCompartirDatos,
                     onTamanoTextoClick = { navController.navigate(Routes.TAMANO_TEXTO) },
                     // Estas dos no tienen pantalla diseñada todavía.
