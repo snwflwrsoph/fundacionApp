@@ -71,16 +71,7 @@ fun ConfiguracionScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            item { SeccionTitulo(stringResource(R.string.seccion_preferencias)) }
-            item {
-                ItemSwitch(
-                    titulo = stringResource(R.string.notificaciones_titulo),
-                    subtitulo = stringResource(R.string.notificaciones_subtitulo),
-                    checked = ajustes.notificaciones,
-                    onCheckedChange = onNotificacionesChange
-                )
-            }
-            item { Divisor() }
+
             item { SeccionTitulo(stringResource(R.string.seccion_accesibilidad)) }
             item {
                 ItemSwitch(
@@ -109,15 +100,6 @@ fun ConfiguracionScreen(
             }
             item { Divisor() }
             item { SeccionTitulo(stringResource(R.string.seccion_privacidad)) }
-            item {
-                ItemSwitch(
-                    titulo = stringResource(R.string.compartir_datos_titulo),
-                    subtitulo = stringResource(R.string.compartir_datos_subtitulo),
-                    checked = ajustes.compartirDatos,
-                    onCheckedChange = onCompartirDatosChange
-                )
-            }
-            item { Divisor() }
             item {
                 Item(
                     titulo = stringResource(R.string.permisos_titulo),
