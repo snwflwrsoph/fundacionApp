@@ -238,8 +238,13 @@ fun FerApp(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Routes.BIENVENIDA) {
+                val alRegresar:(() -> Unit)? = if (perfil.onboardingCompleto) {
+                    {navController.popBackStack()}
+                } else null
+
                 PreferenciasScreen(
                     seleccionInicial = perfil.tipoUsuario,
+                    onRegresar = alRegresar,
                     onContinuar = { tipo ->
                         viewModel.seleccionarTipoUsuario(tipo)
 

@@ -42,91 +42,113 @@ import com.fer.app.ui.theme.FerCeleste
 import com.fer.app.ui.theme.FerFondoTarjetaSeleccionada
 import com.fer.app.ui.theme.FerFontFamily
 import com.fer.app.ui.theme.FerNavy
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun PreferenciasScreen(
     modifier: Modifier = Modifier,
     seleccionInicial: TipoUsuario? = null,
+    onRegresar: (() -> Unit)? = null,
     onContinuar: (TipoUsuario) -> Unit = {}
 ) {
     var seleccion by remember {
         mutableStateOf<TipoUsuario?>(seleccionInicial)
     }
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 40.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ---------- Encabezado ----------
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "Bienvenido",
-            fontFamily = FerFontFamily,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        Column(horizontalAlignment = Alignment.Start) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 40.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // ---------- Encabezado ----------
+            Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "Selecciona quién eres",
+                text = "Bienvenido",
                 fontFamily = FerFontFamily,
-                fontSize = 20.sp,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Box(
+            Spacer(modifier = Modifier.height(20.dp))
+            Column(horizontalAlignment = Alignment.Start) {
+                Text(
+                    text = "Selecciona quién eres",
+                    fontFamily = FerFontFamily,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Box(
+                    modifier = Modifier
+                        .width(38.dp)
+                        .height(4.dp)
+                        .background(FerCeleste, RoundedCornerShape(2.dp))
+                )
+            }
+
+            // ---------- Tarjetas (centradas verticalmente) ----------
+            LazyColumn(
                 modifier = Modifier
-                    .width(38.dp)
-                    .height(4.dp)
-                    .background(FerCeleste, RoundedCornerShape(2.dp))
-            )
-        }
-
-        // ---------- Tarjetas (centradas verticalmente) ----------
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
-        ) {
-            item {
-                OpcionCard(
-                    titulo = "Becario",
-                    descripcion = "Accede a avisos, convocatorias y beneficios exclusivos para becarios FER.",
-                    icono = R.drawable.graduation,
-                    seleccionado = seleccion == TipoUsuario.BECARIO,
-                    onClick = { seleccion = TipoUsuario.BECARIO }
-                )
-            }
-            item {
-                OpcionCard(
-                    titulo = "Aspirante",
-                    descripcion = "Convocatorias y avisos para futuros becarios.",
-                    icono = R.drawable.binoculares,
-                    seleccionado = seleccion == TipoUsuario.ASPIRANTE,
-                    onClick = { seleccion = TipoUsuario.ASPIRANTE }
-                )
-            }
-        }
-
-        // ---------- Botones ----------
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            BotonSiguienteFER(
-                habilitado = seleccion != null,
-                esUltimoPaso = seleccion == TipoUsuario.ASPIRANTE,
-                onClick = {
-                    seleccion?.let(onContinuar)
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(vertical = 12.dp, horizontal = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
+            ) {
+                item {
+                    OpcionCard(
+                        titulo = "Becario",
+                        descripcion = "Accede a avisos, convocatorias y beneficios exclusivos para becarios FER.",
+                        icono = R.drawable.graduation,
+                        seleccionado = seleccion == TipoUsuario.BECARIO,
+                        onClick = { seleccion = TipoUsuario.BECARIO }
+                    )
                 }
+                item {
+                    OpcionCard(
+                        titulo = "Aspirante",
+                        descripcion = "Convocatorias y avisos para futuros becarios.",
+                        icono = R.drawable.binoculares,
+                        seleccionado = seleccion == TipoUsuario.ASPIRANTE,
+                        onClick = { seleccion = TipoUsuario.ASPIRANTE }
+                    )
+                }
+            }
+
+            // ---------- Botones ----------
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                BotonSiguienteFER(
+                    habilitado = seleccion != null,
+                    esUltimoPaso = seleccion == TipoUsuario.ASPIRANTE,
+                    onClick = {
+                        seleccion?.let(onContinuar)
+                    }
+                )
+            }
+        }
+
+        if(onRegresar != null) {
+            BotonCircular(
+                icono = FlechaIzquierdaIcon,
+                descripcion = "Regresar",
+                onClick = onRegresar,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 16.dp, top = 16.dp)
             )
         }
     }
@@ -206,5 +228,22 @@ fun OpcionCard(
                 )
             )
         }
+    }
+}
+
+@Composable
+private fun BotonCircular(
+    icono: ImageVector,
+    descripcion: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .size(56.dp)
+            .background(FerNavy, CircleShape)
+    ) {
+        Icon(imageVector = icono, contentDescription = descripcion, tint = Color.White)
     }
 }
