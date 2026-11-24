@@ -40,7 +40,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.delay
 
+enum class ResultadoReporte { ENVIADO, PENDIENTE, ERROR}
 class AppViewModel(
     application: Application,
     private val perfilRepository: PerfilRepository,
@@ -126,6 +128,10 @@ class AppViewModel(
         viewModelScope.launch { announcementRepository.alternarLike(id) }
     }
 
+    fun refrescarAnuncio(id: String) {
+        viewModelScope.launch {announcementRepository.refrescar(id)}
+    }
+
     /** Se llama al abrir un anuncio: su notificación deja de aparecer como nueva. */
     fun marcarLeida(id: String) {
         viewModelScope.launch { announcementRepository.marcarLeida(id) }
@@ -138,7 +144,12 @@ class AppViewModel(
     fun cambiarCompartirDatos(valor: Boolean) = actualizarAjustes { it.copy(compartirDatos = valor) }
     fun cambiarTamanoTexto(tamano: TamanoTexto) = actualizarAjustes { it.copy(tamanoTexto = tamano) }
 
-    fun enviarReporteProblema(categoria: String, descripcion: String, contacto: String) {
+    fun enviarReporteProblema(
+        categoria: String,
+        descripcion: String,
+        contacto: String,
+        onResultado: (ResultadoReporte) -> Unit
+    ) {
         val ahora = System.currentTimeMillis()
         val prefs = getApplication<Application>().getSharedPreferences("fer_reportes_prefs", Context.MODE_PRIVATE)
         val guardados = prefs.getStringSet("reportes_locales", emptySet())?.toMutableSet() ?: mutableSetOf()
@@ -154,16 +165,30 @@ class AppViewModel(
             "fecha" to FieldValue.serverTimestamp(),
             "timestampMillis" to ahora
         )
+
+        var respondido = false
+        fun responder(resultado: ResultadoReporte) {
+            if (respondido) return
+            respondido = true
+            onResultado(resultado)
+        }
+
+        viewModelScope.launch {
+            delay(10_000)
+            responder(ResultadoReporte.PENDIENTE)
+        }
         runCatching {
             FirebaseFirestore.getInstance().collection("reportes")
                 .add(reporte)
                 .addOnSuccessListener {
                     Log.d("FER", "Reporte enviado a Firestore: ${it.id}")
+                    responder(ResultadoReporte.ENVIADO)
                 }
                 .addOnFailureListener { error ->
                     Log.w("FER", "No se pudo sincronizar el reporte en Firestore; guardado localmente", error)
+                    responder(ResultadoReporte.ERROR)
                 }
-        }
+        }.onFailure { responder(ResultadoReporte.ERROR) }
     }
 
     // Internos

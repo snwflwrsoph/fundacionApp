@@ -31,6 +31,8 @@ class AnnouncementRepositoryFake(
     }
 
     override suspend fun reintentar() = Unit
+    override suspend fun refrescar(id: String) = Unit
+
 
     private fun modificar(id: String, cambio: (Announcement) -> Announcement) {
         _anuncios.update { lista -> lista.map { if (it.id == id) cambio(it) else it } }

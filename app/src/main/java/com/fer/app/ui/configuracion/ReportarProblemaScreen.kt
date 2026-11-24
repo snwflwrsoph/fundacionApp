@@ -42,6 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.fer.app.R
 import com.fer.app.ui.theme.FerTheme
+import androidx.compose.ui.text.style.TextAlign
+
+private const val LIMITE_DESCRIPCION = 2000
 
 enum class CategoriaProblema(val titulo: String, val subtitulo: String) {
     FALLO_APP(
@@ -66,6 +69,7 @@ enum class CategoriaProblema(val titulo: String, val subtitulo: String) {
 fun ReportarProblemaScreen(
     onEnviarReporte: (categoria: String, descripcion: String, contacto: String) -> Unit,
     modifier: Modifier = Modifier,
+    enviando: Boolean = false,
     onBackClick: () -> Unit = {}
 ) {
     var categoriaSeleccionada by rememberSaveable { mutableStateOf(CategoriaProblema.FALLO_APP) }
@@ -144,9 +148,16 @@ fun ReportarProblemaScreen(
             ) {
                 OutlinedTextField(
                     value = descripcion,
-                    onValueChange = { descripcion = it },
+                    onValueChange = { descripcion = it.take(LIMITE_DESCRIPCION) },
                     label = { Text("Describe el problema") },
                     placeholder = { Text("Escribe los detalles de lo que ocurrió...") },
+                    supportingText ={
+                        Text(
+                            text = "${descripcion.length} / $LIMITE_DESCRIPCION",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End
+                        )
+                    },
                     minLines = 4,
                     maxLines = 8,
                     shape = RoundedCornerShape(16.dp),
@@ -184,7 +195,7 @@ fun ReportarProblemaScreen(
                         .height(52.dp)
                 ) {
                     Text(
-                        text = "Enviar reporte",
+                        text = if (enviando) "Enviando..." else "Enviar reporte",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )

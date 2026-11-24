@@ -26,6 +26,8 @@ interface AnnouncementRepository {
     suspend fun alternarLike(id: String)
     suspend fun marcarLeida(id: String)
     suspend fun reintentar()
+
+    suspend fun refrescar(id: String)
 }
 
 interface CatalogoRepository {

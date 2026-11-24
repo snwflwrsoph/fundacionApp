@@ -15,6 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.google.firebase.firestore.Source
 
 class AnnouncementRepositoryFirestore(
     context: Context,
@@ -61,6 +62,7 @@ class AnnouncementRepositoryFirestore(
     private fun asegurarSesionYEscuchar() {
         _estado.value = EstadoCarga.Cargando
         if (auth.currentUser != null) {
+            Log.d(TAG, "Sesion ya existente, uid=${auth.currentUser?.uid}")
             escuchar()
             return
         }
@@ -68,6 +70,8 @@ class AnnouncementRepositoryFirestore(
             if (!tarea.isSuccessful) {
                 // Se intenta leer de todas formas: si las reglas permiten lectura pública funciona igual.
                 Log.w(TAG, "No se pudo iniciar sesión anónima (¿está activada en Firebase Auth?)", tarea.exception)
+            } else{
+                Log.d(TAG, "Sesion anonima OK, uid=${auth.currentUser?.uid}")
             }
             escuchar()
         }
@@ -94,6 +98,20 @@ class AnnouncementRepositoryFirestore(
 
     override suspend fun reintentar() {
         asegurarSesionYEscuchar()
+    }
+
+    override suspend fun refrescar(id: String) {
+        firestore.collection(COLECCION).document(id)
+            .get(Source.SERVER)
+            .addOnSuccessListener { doc ->
+                if (!doc.exists()) return@addOnSuccessListener
+                documentos = documentos.map { if (it.id == doc.id) doc else it }
+                reconstruir()
+            }
+            .addOnFailureListener { error ->
+                Log.w(TAG, "No se pudo refrescar el anuncio $id", error)
+            }
+
     }
 
     override fun close() {

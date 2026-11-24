@@ -30,7 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
+//import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -279,7 +279,7 @@ private fun AutorFoto(
         )
     }
 }
-
+/*
 @Composable
 fun AsyncImage(
     model: String,
@@ -291,6 +291,8 @@ fun AsyncImage(
 ) {
     TODO("Not yet implemented")
 }
+
+ */
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 1200)
 @Composable

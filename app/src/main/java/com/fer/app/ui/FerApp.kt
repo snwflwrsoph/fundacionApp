@@ -51,6 +51,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
@@ -332,7 +333,10 @@ fun FerApp(
                     ?: todosLosAnuncios.firstOrNull { it.id == id }
 
                 // Al abrir el detalle, su notificación deja de aparecer como nueva.
-                LaunchedEffect(id) { viewModel.marcarLeida(id) }
+                LaunchedEffect(id) {
+                    viewModel.marcarLeida(id)
+                    viewModel.refrescarAnuncio(id)
+                }
 
                 if (anuncio != null) {
                     NewsDetailScreen(
@@ -407,15 +411,28 @@ fun FerApp(
                 )
             }
             composable(Routes.REPORTAR_PROBLEMA) {
+                var enviando by remember { mutableStateOf(false) }
+
                 ReportarProblemaScreen(
+                    enviando = enviando,
                     onEnviarReporte = { categoria, descripcion, contacto ->
-                        viewModel.enviarReporteProblema(categoria, descripcion, contacto)
-                        Toast.makeText(
-                            context,
-                            "Reporte enviado. ¡Gracias por tu ayuda!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        navController.popBackStack()
+                        enviando = true
+                        viewModel.enviarReporteProblema(categoria, descripcion, contacto) { resultado ->
+                            enviando = false
+                            when (resultado) {
+                                ResultadoReporte.ENVIADO -> {
+                                    Toast.makeText(context, "Reporte enviado. ¡Gracias!", Toast.LENGTH_SHORT).show()
+                                    salirDeReporte(navController)
+                                }
+                                ResultadoReporte.PENDIENTE -> {
+                                    Toast.makeText(context, "Sin conexión: Tu eporte se guardó y se enviará cuando haya internet", Toast.LENGTH_LONG).show()
+                                    salirDeReporte(navController)
+                                }
+                                ResultadoReporte.ERROR -> {
+                                    Toast.makeText(context, "Error al enviar el reporte. Inténtalo de nuevo.", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
                     },
                     onBackClick = { navController.popBackStack() }
                 )
@@ -448,5 +465,11 @@ private fun NavHostController.irAPestana(ruta: String) {
         popUpTo(Routes.INICIO) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+private fun salirDeReporte(navController: NavHostController) {
+    if (navController.currentDestination?.route == Routes.REPORTAR_PROBLEMA) {
+        navController.popBackStack()
     }
 }
