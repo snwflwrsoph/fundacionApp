@@ -77,8 +77,8 @@ fun NewsDetailScreen(
             FilledTonalIconButton(
                 onClick = onBack,
                 colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.onSurface,
+                    contentColor = MaterialTheme.colorScheme.surface
                 )
                 ) {
                 Icon(
