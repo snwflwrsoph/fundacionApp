@@ -23,7 +23,7 @@ private val FerColorScheme = lightColorScheme(
 )
 
 private val DarkFerColorScheme = darkColorScheme(
-    primary = Color(0xFF4C6EF5),
+    primary = Color(0xFF86A2E9),
     onPrimary = Color.White,
     secondary = FerGold,
     onSecondary = FerOnGold,

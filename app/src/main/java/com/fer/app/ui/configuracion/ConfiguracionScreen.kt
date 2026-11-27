@@ -31,6 +31,7 @@ import com.fer.app.R
 import com.fer.app.model.AjustesApp
 import com.fer.app.ui.theme.FerTheme
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -63,7 +64,7 @@ fun ConfiguracionScreen(
                 modifier = Modifier.align(Alignment.Center),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -117,7 +118,7 @@ fun ConfiguracionScreen(
                         .clickable { onReportarProblemaClick() }
                         .padding(horizontal = 28.dp, vertical = 12.dp),
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.primary,
                     textDecoration = TextDecoration.Underline
                 )
             }
@@ -136,7 +137,7 @@ private fun SeccionTitulo(texto: String) {
             .semantics { heading() },
         fontSize = 24.sp,
         fontWeight = FontWeight.Normal,
-        color = MaterialTheme.colorScheme.onBackground
+        color = MaterialTheme.colorScheme.primary
     )
 }
 
@@ -159,7 +160,7 @@ private fun ItemSwitch(
             Text(
                 text = titulo,
                 fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = subtitulo,
@@ -169,7 +170,15 @@ private fun ItemSwitch(
         }
         Switch(
             checked = checked,
-            onCheckedChange = null
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                checkedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                uncheckedThumbColor = MaterialTheme.colorScheme.surface,
+                uncheckedTrackColor = MaterialTheme.colorScheme.primary,
+                uncheckedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         )
     }
 }
@@ -192,7 +201,7 @@ private fun Item(
             Text(
                 text = titulo,
                 fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = subtitulo,
@@ -203,7 +212,7 @@ private fun Item(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground
+            tint = MaterialTheme.colorScheme.primary
         )
     }
 }
